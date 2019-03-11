@@ -1,0 +1,135 @@
+<?php
+declare(strict_types=1);
+
+namespace Sagrada\Validators;
+
+use Sagrada\Board\Space\BoardSpace;
+use Sagrada\Board\Space\Restriction\NoRestriction;
+use Sagrada\Dice\Color\DiceColorInterface;
+use Sagrada\Dice\SagradaDie;
+use Sagrada\Dice\Value\DiceValueInterface;
+use Sagrada\DiePlacement;
+use Sagrada\Board\Board;
+
+/**
+ * Class DiePlacementValidator
+ *
+ *  awareness of space value/color restrictions to determine if a given dice placement is invalid.
+ *
+ * @package Sagrada\Validators
+ */
+class DiePlacementValidator
+{
+    /**
+     * @param DiePlacement $diePlacement
+     * @param Board $board
+     * @return bool
+     * @throws \Exception
+     */
+    public function isValidDiePlacement(DiePlacement $diePlacement, Board $board): bool
+    {
+        if ($board->getGrid()->areValidCoordinates($diePlacement->getCoordinates()) === false) {
+            throw new \Exception(sprintf("Invalid grid coordinates: %s", $diePlacement->getCoordinates()));
+        }
+
+        $boardSpace = $board->getSpace($diePlacement->getCoordinates());
+        $die = $diePlacement->getDie();
+
+        return $boardSpace->hasDie() === false
+            && $this->dieMeetsIntrinsicRequirements($die, $boardSpace)
+            && $this->placementMeetsBoardRequirements($diePlacement, $board);
+    }
+
+    /**
+     * @param DiePlacement $diePlacement
+     * @param Board $board
+     * @return bool
+     * @throws \Exception
+     */
+    public function placementMeetsBoardRequirements(DiePlacement $diePlacement, Board $board): bool
+    {
+        $adjacentSpaces = $board->getOrthongonallyAdjacentSpaces($diePlacement->getCoordinates());
+        foreach ($adjacentSpaces->getItems() as $adjacentSpace) {
+            if ($this->dieMeetsBoardSpaceRequirements($diePlacement->getDie(), $adjacentSpace) === false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param DiceColorInterface $dieColor
+     * @param BoardSpace $boardSpace
+     * @return bool
+     */
+    public function colorMeetsIntrinsicColorRequirements(DiceColorInterface $dieColor, BoardSpace $boardSpace): bool
+    {
+        if ($boardSpace->hasIntrinsicColorRestriction() === false) {
+            return true;
+        }
+        $requiredColor = $boardSpace->getIntrinsicRestriction()->getColor();
+
+        return $dieColor instanceof $requiredColor;
+    }
+
+    /**
+     * @param DiceValueInterface $dieValue
+     * @param BoardSpace $boardSpace
+     * @return bool
+     */
+    public function valueMeetsIntrinsicValueRequirements(DiceValueInterface $dieValue, BoardSpace $boardSpace): bool
+    {
+        if ($boardSpace->hasIntrinsicValueRestriction() === false) {
+            return true;
+        }
+        $requiredValue = $boardSpace->getIntrinsicRestriction()->getValue();
+
+        return $dieValue instanceof $requiredValue;
+    }
+
+    /**
+     * @param SagradaDie $die
+     * @param BoardSpace $boardSpace
+     * @return bool
+     */
+    public function dieMeetsIntrinsicRequirements(SagradaDie $die, BoardSpace $boardSpace): bool
+    {
+        if ($boardSpace->hasIntrinsicRestriction() === false) {
+            return true;
+        }
+        return $this->colorMeetsIntrinsicColorRequirements($die->getColor(), $boardSpace)
+            && $this->valueMeetsIntrinsicValueRequirements($die->getValue(), $boardSpace);
+    }
+
+    /**
+     * @param SagradaDie $die
+     * @param BoardSpace $boardSpace
+     * @return bool
+     */
+    public function dieMeetsBoardSpaceRequirements(SagradaDie $die, BoardSpace $boardSpace): bool
+    {
+        $restrictions = $boardSpace->getDieRestrictions();
+        $colorRestriction = $restrictions->getColorRestriction();
+        $valueRestriction = $restrictions->getValueRestriction();
+
+        if (($colorRestriction instanceof NoRestriction) === false) {
+            $prohibitedColor = $colorRestriction->getColor();
+            $dieColor = $die->getColor();
+
+            if ($dieColor instanceof $prohibitedColor) {
+                return false;
+            }
+        }
+
+        if (($valueRestriction instanceof NoRestriction) === false) {
+            $prohibitedValue = $valueRestriction->getValue();
+            $dieValue = $die->getValue();
+
+            if ($dieValue instanceof $prohibitedValue) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}

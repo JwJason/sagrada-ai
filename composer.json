@@ -1,0 +1,10 @@
+{
+  "autoload": {
+    "psr-4": {
+      "Sagrada\\": "src/"
+    }
+  },
+  "require": {
+    "myclabs/deep-copy": "^1.8"
+  }
+}
