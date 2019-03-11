@@ -138,7 +138,7 @@ class PlayerGameState
     {
         // XXX: This isn't, strictly speaking, correct. We should check the dice bag and open spots
         // to make sure there's a possible color left to play somewhere.
-        return $this->getBoard()->getOpenSpaces()->getCount() > 0;
+        return $this->getBoard()->getAllOpenSpaces()->getCount() > 0;
     }
 
     /**

@@ -37,7 +37,31 @@ class DiePlacementValidator
 
         return $boardSpace->hasDie() === false
             && $this->dieMeetsIntrinsicRequirements($die, $boardSpace)
-            && $this->placementMeetsBoardRequirements($diePlacement, $board);
+            && $this->placementMeetsBoardRequirements($diePlacement, $board)
+            && $this->placementMeetsGameRequirements($diePlacement, $board);
+    }
+
+    /**
+     * @param DiePlacement $diePlacement
+     * @param Board $board
+     * @return bool
+     * @throws \Exception
+     */
+    public function placementMeetsGameRequirements(DiePlacement $diePlacement, Board $board): bool
+    {
+        // If there are no dice currently on the board, the new die must be placed along the outer edge.
+        if ($board->getAllCoveredSpaces()->getCount() === 0) {
+            $row = $diePlacement->getCoordinates()->getRow();
+            $col = $diePlacement->getCoordinates()->getCol();
+            return ($row === 0 || $row === $board->getGrid()->getRowCount() - 1)
+                && ($col === 0 || $col === $board->getGrid()->getColCount() - 1);
+        }
+        // If there are dice currently on the board, the new die must be placed on space which is adjacent to other dice.
+        else {
+            $adjacentSpaces = $board->getAllAdjacentSpaces($diePlacement->getCoordinates());
+            $adjacentSpacesWithDice = $adjacentSpaces->getFilteredByHavingDice();
+            return $adjacentSpacesWithDice->getCount() > 0;
+        }
     }
 
     /**

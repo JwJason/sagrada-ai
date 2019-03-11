@@ -58,7 +58,7 @@ class MonteCarloStrategy implements StrategyInterface
             $score = $this->playSimulatedGamesWithInitialDiePlacement(
                 $initialDiePlacement,
                 $gameState,
-                1000
+                3000
             );
             $result = ['diePlacement' => $initialDiePlacement, 'score' => $score];
             $results[] = $result;

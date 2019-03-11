@@ -31,8 +31,8 @@ const AMOUNT_OF_EACH_COLOR_DICE = 18;
 
 try {
     // Initialize
-//    $meta = new Meta\Comitas();
-    $meta = new Meta\SmallTestBoard();
+    $meta = new Meta\Comitas();
+//    $meta = new Meta\SmallTestBoard();
     $board = new Board($meta);
     $player = new SagradaPlayer();
     $diceBag = new DiceBag(AMOUNT_OF_EACH_COLOR_DICE);

@@ -36,23 +36,32 @@ class Board
      * @return BoardSpaceCollection
      * @throws \Exception
      */
+    public function getAllAdjacentSpaces(GridCoordinates $coordinates): BoardSpaceCollection
+    {
+        $adjacentCoordinates = $this->getGrid()->getAllAdjacentCoordinates($coordinates);
+        return $this->getSpaces($adjacentCoordinates);
+    }
+
+    /**
+     * @param GridCoordinates $coordinates
+     * @return BoardSpaceCollection
+     * @throws \Exception
+     */
     public function getOrthongonallyAdjacentSpaces(GridCoordinates $coordinates): BoardSpaceCollection
     {
         $adjacentCoordinates = $this->getGrid()->getOrthogonallyAdjacentCoordinates($coordinates);
-        $adjacentSpaces = array_map(function(GridCoordinates $coordinates) {
-            return $this->getSpace($coordinates);
-        }, $adjacentCoordinates);
-        return new BoardSpaceCollection($adjacentSpaces);
+        return $this->getSpaces($adjacentCoordinates);
     }
 
-
+    /**
+     * @param GridCoordinates $coordinates
+     * @return BoardSpaceCollection
+     * @throws \Exception
+     */
     public function getDiagonallyAdjacentSpaces(GridCoordinates $coordinates): BoardSpaceCollection
     {
         $adjacentCoordinates = $this->getGrid()->getDiagonallyAdjacentCoordinates($coordinates);
-        $adjacentSpaces = array_map(function(GridCoordinates $coordinates) {
-            return $this->getSpace($coordinates);
-        }, $adjacentCoordinates);
-        return new BoardSpaceCollection($adjacentSpaces);
+        return $this->getSpaces($adjacentCoordinates);
     }
 
     /**
@@ -85,7 +94,21 @@ class Board
     /**
      * @return BoardSpaceCollection
      */
-    public function getOpenSpaces(): BoardSpaceCollection
+    public function getAllSpaces(): BoardSpaceCollection
+    {
+        $iterator = new RowIterator($this);
+        $allSpaces = [];
+        foreach ($iterator as $row) {
+            $rowSpaces = $row->getItems();
+            $allSpaces = array_merge($allSpaces, $rowSpaces);
+        }
+        return new BoardSpaceCollection($allSpaces);
+    }
+
+    /**
+     * @return BoardSpaceCollection
+     */
+    public function getAllOpenSpaces(): BoardSpaceCollection
     {
         $iterator = new RowIterator($this);
         $openSpaces = [];
@@ -94,6 +117,20 @@ class Board
             $openSpaces = array_merge($openSpaces, $rowOpenSpaces->getItems());
         }
         return new BoardSpaceCollection($openSpaces);
+    }
+
+    /**
+     * @return BoardSpaceCollection
+     */
+    public function getAllCoveredSpaces(): BoardSpaceCollection
+    {
+        $iterator = new RowIterator($this);
+        $coveredSpaces = [];
+        foreach ($iterator as $row) {
+            $rowCoveredSpaces = $row->getFilteredByHavingDice();
+            $coveredSpaces = array_merge($coveredSpaces, $rowCoveredSpaces->getItems());
+        }
+        return new BoardSpaceCollection($coveredSpaces);
     }
 
     /**
@@ -128,9 +165,18 @@ class Board
         $this->getGrid()->setItem($boardSpace, $coordinates);
     }
 
-    public function getSpaces(array $coordinatesCollection)
+    /**
+     * @param array $coordinatesCollection
+     * @return BoardSpaceCollection
+     * @throws \Exception
+     */
+    public function getSpaces(array $coordinatesCollection): BoardSpaceCollection
     {
-
+        $spaces = [];
+        foreach ($coordinatesCollection as $coordinates) {
+            $spaces[] = $this->getSpace($coordinates);
+        }
+        return new BoardSpaceCollection($spaces);
     }
 
     /**
