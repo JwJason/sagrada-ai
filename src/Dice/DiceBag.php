@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Sagrada\Dice;
 
+use Sagrada\Board\Space\Restriction\ColorRestriction\ColorRestrictionInterface;
 use Sagrada\Dice\Color\DiceColorFactory;
 use Sagrada\Dice\Color\DiceColorInterface;
 use Sagrada\Dice\Value\DiceValueFactory;
@@ -84,6 +85,36 @@ class DiceBag
         $this->colorCounter[$colorSymbol]--;
 
         return $die;
+    }
+
+    /**
+     * @param DiceColorInterface $diceColor
+     */
+    public function removeOneDieOfColor(DiceColorInterface $diceColor)
+    {
+        $colorSymbol = $diceColor->getSymbol();
+        $this->colorCounter[$colorSymbol]--;
+    }
+
+    /**
+     * @return SagradaDie[]
+     * @throws \Exception
+     */
+    public function getAllPossibleRemainingDiceRolls(): array
+    {
+        $colorCounter = $this->getColorCounterForRemainingColors();
+        $dice = [];
+
+        foreach ($colorCounter as $count => $colorSymbol) {
+            for ($value = 1; $value <= 6; $value++) {
+                $dice[] = new SagradaDie(
+                    $this->colorFactory->createDiceColorFromSymbol($colorSymbol),
+                    $this->valueFactory->createDiceValueFromSymbol(strval($value))
+                );
+            }
+        }
+
+        return $dice;
     }
 
     /**

@@ -204,13 +204,4 @@ class Board
 
         return join("\n", $rowsArray);
     }
-
-    /**
-     * @param GridCoordinates $coordinates
-     * @throws \Exception
-     */
-    protected function throwInvalidSpaceException(GridCoordinates $coordinates)
-    {
-        throw new \Exception(sprintf("Invalid position: %s.", $coordinates->toString()));
-    }
 }

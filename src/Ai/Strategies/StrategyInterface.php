@@ -18,5 +18,5 @@ interface StrategyInterface
      * @param PlayerGameState $gameState
      * @return DiePlacement
      */
-    public function getBestDiePlacement(SagradaDie $die, PlayerGameState $gameState): DiePlacement;
+    public function getBestDiePlacement(SagradaDie $die, PlayerGameState $gameState): ?DiePlacement;
 }

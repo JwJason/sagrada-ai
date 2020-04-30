@@ -58,7 +58,7 @@ class MonteCarloStrategy implements StrategyInterface
             $score = $this->playSimulatedGamesWithInitialDiePlacement(
                 $initialDiePlacement,
                 $gameState,
-                3000
+                500
             );
             $result = ['diePlacement' => $initialDiePlacement, 'score' => $score];
             $results[] = $result;
@@ -67,6 +67,10 @@ class MonteCarloStrategy implements StrategyInterface
         usort($results, function($result1, $result2) {
             return $result2['score'] <=> $result1['score'];
         });
+
+        foreach ($results as $result) {
+            echo sprintf("%s -> %f\n", $result['diePlacement'], $result['score']);
+        }
 
         return $results[0]['diePlacement'];
     }
@@ -94,6 +98,10 @@ class MonteCarloStrategy implements StrategyInterface
         return $this->scoreSimulationResults($scores);
     }
 
+    /**
+     * @param array $resultScores
+     * @return float
+     */
     protected function scoreSimulationResults(array $resultScores): float
     {
         return array_sum($resultScores) / count($resultScores);

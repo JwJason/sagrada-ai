@@ -74,4 +74,16 @@ class SagradaDie
     {
         return $this->__toString();
     }
+
+    /**
+     * @param SagradaDie $die
+     * @return bool
+     */
+    public function equals(SagradaDie $die): bool
+    {
+        $color = $die->getColor();
+        $value = $die->getValue();
+        return $this->getColor() instanceof $color
+            && $this->getValue() instanceof $value;
+    }
 }

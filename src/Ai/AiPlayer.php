@@ -5,14 +5,17 @@ namespace Sagrada\Ai;
 
 use Sagrada\Ai\Strategies\StrategyInterface;
 use Sagrada\Dice\SagradaDie;
+use Sagrada\DiePlacementManager;
 use Sagrada\Game\PlayerGameState;
 
 class AiPlayer
 {
+    protected $diePlacementManager;
     protected $evaluationStrategy;
 
-    public function __construct(StrategyInterface $evaluationStrategy)
+    public function __construct(StrategyInterface $evaluationStrategy, DiePlacementManager $placementManager)
     {
+        $this->diePlacementManager = $placementManager;
         $this->evaluationStrategy = $evaluationStrategy;
     }
 
@@ -24,12 +27,10 @@ class AiPlayer
     public function takeTurn(SagradaDie $die, PlayerGameState $gameState): void
     {
         $gameState->decrementTurnsRemaining();
-        try {
-            $bestDiePlacement = $this->evaluationStrategy->getBestDiePlacement($die, $gameState);
-        } catch (NoAvailableMoveException $e) {
-            echo $e->getMessage() . "\n";
-            return;
+        echo sprintf("Evaluating play for die %s\n", $die);
+        $bestDiePlacement = $this->evaluationStrategy->getBestDiePlacement($die, $gameState);
+        if ($bestDiePlacement) {
+            $this->diePlacementManager->putDiePlacementOnBoard($bestDiePlacement, $gameState->getBoard());
         }
-        $gameState->placeDieOnBoardSpace($bestDiePlacement);
     }
 }

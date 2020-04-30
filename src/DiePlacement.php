@@ -70,4 +70,12 @@ class DiePlacement
     {
         $this->restrictionModifier = $restrictionModifier;
     }
+
+    /**
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return sprintf('%s -> %s', $this->getDie()->__toString(), $this->getCoordinates()->__toString());
+    }
 }

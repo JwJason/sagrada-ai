@@ -9,8 +9,11 @@ use function DeepCopy\deep_copy;
 
 use Sagrada\Ai\AiPlayer;
 use Sagrada\Ai\ProbabilityCalculator;
+use Sagrada\Ai\Simulations\GameSimulator;
 use Sagrada\Ai\Strategies\MonteCarlo\MonteCarloSimulator;
 use Sagrada\Ai\Strategies\MonteCarlo\MonteCarloStrategy;
+use Sagrada\Ai\Strategies\MonteCarloTree\MonteCarloTreeStrategy;
+use Sagrada\Ai\Strategies\MonteCarloTree\Uct;
 use Sagrada\Board\Board;
 use Sagrada\Board\Grid\GridCoordinates;
 use Sagrada\Board\Iterators\RowIterator;
@@ -37,13 +40,12 @@ try {
     $player = new SagradaPlayer();
     $diceBag = new DiceBag(AMOUNT_OF_EACH_COLOR_DICE);
     $diePlacementValidator = new DiePlacementValidator();
-    $diePlacementFinder = new DiePlacementFinder($diePlacementValidator);
-    $aiPlayer = new AiPlayer(
-        new MonteCarloStrategy(
-            new DiePlacementFinder($diePlacementValidator),
-            new MonteCarloSimulator($diePlacementFinder)
-        )
+    $diePlacementManager = new DiePlacementManager($diePlacementValidator);
+    $aiStrategy = new MonteCarloTreeStrategy(
+        new GameSimulator(),
+        new Uct()
     );
+    $aiPlayer = new AiPlayer($aiStrategy, $diePlacementManager);
 
     // Example round start
 //    $dice = [];

@@ -54,7 +54,7 @@ class DiePlacementValidator
             $row = $diePlacement->getCoordinates()->getRow();
             $col = $diePlacement->getCoordinates()->getCol();
             return ($row === 0 || $row === $board->getGrid()->getRowCount() - 1)
-                && ($col === 0 || $col === $board->getGrid()->getColCount() - 1);
+                || ($col === 0 || $col === $board->getGrid()->getColCount() - 1);
         }
         // If there are dice currently on the board, the new die must be placed on space which is adjacent to other dice.
         else {

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Sagrada\Game;
 
+use function DeepCopy\deep_copy;
 use Sagrada\Board\Board;
 use Sagrada\Dice\DiceBag;
 use Sagrada\Dice\DiceDraftPool;
@@ -72,31 +73,11 @@ class PlayerGameState
     }
 
     /**
-     * @param DiePlacement $diePlacement
-     * @throws \Exception
+     * @return PlayerGameState
      */
-    public function placeDieOnBoardSpace(DiePlacement $diePlacement)
+    public function deepCopy(): self
     {
-//        echo sprintf(
-//            "Placing die %s at %s...\n",
-//            $diePlacement->getDie()->toString(),
-//            $diePlacement->getCoordinates()->toString()
-//        );
-
-        $board = $this->board;
-        $placementValidator = $this->placementValidator;
-        if ($placementValidator->isValidDiePlacement($diePlacement, $this->board) === false) {
-            echo "Invalid dice placement\n";
-            return;
-        }
-
-        $dieSpace = new DieSpace();
-        $dieSpace->setDie($diePlacement->getDie());
-
-        $boardSpace = $board->getSpace($diePlacement->getCoordinates());
-        $boardSpace->setDieSpace($dieSpace);
-
-        $board->setSpace($boardSpace, $diePlacement->getCoordinates());
+        return deep_copy($this);
     }
 
     /**
