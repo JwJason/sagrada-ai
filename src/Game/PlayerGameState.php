@@ -7,11 +7,9 @@ use function DeepCopy\deep_copy;
 use Sagrada\Board\Board;
 use Sagrada\Dice\DiceBag;
 use Sagrada\Dice\DiceDraftPool;
-use Sagrada\DieSpace\DieSpace;
 use Sagrada\Player\SagradaPlayer;
 use Sagrada\Scoring\BoardScorer;
-use Sagrada\Validators\DiePlacementValidator;
-use Sagrada\DiePlacement;
+use Sagrada\DiePlacement\Validator;
 
 /**
  * Class PlayerGameState
@@ -36,10 +34,6 @@ class PlayerGameState
      */
     protected $player;
     /**
-     * @var DiePlacementValidator
-     */
-    protected $placementValidator;
-    /**
      * @var BoardScorer
      */
     protected $scorer;
@@ -54,20 +48,17 @@ class PlayerGameState
      * @param DiceBag $diceBag
      * @param DiceDraftPool $draftPool
      * @param SagradaPlayer $player
-     * @param DiePlacementValidator $placementValidator
      */
     public function __construct(
         Board $board,
         DiceBag $diceBag,
         DiceDraftPool $draftPool,
-        SagradaPlayer $player,
-        DiePlacementValidator $placementValidator
+        SagradaPlayer $player
     ) {
         $this->board = $board;
         $this->diceBag = $diceBag;
         $this->draftPool = $draftPool;
         $this->player = $player;
-        $this->placementValidator = $placementValidator;
 
         $this->turnsRemaining = 30;
     }
@@ -148,13 +139,5 @@ class PlayerGameState
     public function getPlayer(): SagradaPlayer
     {
         return $this->player;
-    }
-
-    /**
-     * @return DiePlacementValidator
-     */
-    public function getPlacementValidator(): DiePlacementValidator
-    {
-        return $this->placementValidator;
     }
 }

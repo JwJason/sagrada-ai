@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Sagrada\Validators;
+namespace Sagrada\DiePlacement;
 
 use Sagrada\Board\Space\BoardSpace;
 use Sagrada\Board\Space\Restriction\NoRestriction;
@@ -12,13 +12,13 @@ use Sagrada\DiePlacement;
 use Sagrada\Board\Board;
 
 /**
- * Class DiePlacementValidator
+ * Class Validator
  *
  *  awareness of space value/color restrictions to determine if a given dice placement is invalid.
  *
  * @package Sagrada\Validators
  */
-class DiePlacementValidator
+class Validator
 {
     /**
      * @param DiePlacement $diePlacement

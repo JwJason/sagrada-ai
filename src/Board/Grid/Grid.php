@@ -56,9 +56,9 @@ class Grid
         $row = $coordinates->getRow();
         $col = $coordinates->getCol();
         $adjacentCoordinates = [
-            'leftTop'   => new GridCoordinates($row - 1, $col - 1),
-            'rightTop'  => new GridCoordinates($row + 1, $col - 1),
-            'leftBottom'    => new GridCoordinates($row - 1, $col + 1),
+            'leftTop'     => new GridCoordinates($row - 1, $col - 1),
+            'rightTop'    => new GridCoordinates($row + 1, $col - 1),
+            'leftBottom'  => new GridCoordinates($row - 1, $col + 1),
             'rightBottom' => new GridCoordinates($row + 1, $col + 1),
         ];
 

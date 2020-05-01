@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 namespace Sagrada\Ai\Simulations;
 
-use Sagrada\DiePlacementFinder;
-use Sagrada\DiePlacementManager;
+use Sagrada\DiePlacement\Finder;
+use Sagrada\DiePlacement\BoardPlacer;
 use Sagrada\Game\GameResults;
 use Sagrada\Game\PlayerGameState;
 use Sagrada\Game\Score;
 use Sagrada\Scoring\BoardScorer;
-use Sagrada\Validators\DiePlacementValidator;
+use Sagrada\DiePlacement\Validator;
 use Sagrada\Scoring\Scorers\RowColorVariety;
 use Sagrada\Scoring\Scorers\ColumnColorVariety;
 
@@ -20,15 +20,15 @@ use Sagrada\Scoring\Scorers\ColumnColorVariety;
 class GameSimulator
 {
     /**
-     * @var DiePlacementFinder
+     * @var Finder
      */
     protected $placementFinder;
     /**
-     * @var DiePlacementManager
+     * @var BoardPlacer
      */
     protected $placementManager;
     /**
-     * @var DiePlacementValidator
+     * @var Validator
      */
     protected $placementValidator;
 
@@ -37,15 +37,15 @@ class GameSimulator
      */
     public function __construct()
     {
-        $this->placementValidator = new DiePlacementValidator();
-        $this->placementManager = new DiePlacementManager($this->placementValidator);
-        $this->placementFinder = new DiePlacementFinder($this->placementValidator);
+        $this->placementValidator = new Validator();
+        $this->placementManager = new BoardPlacer($this->placementValidator);
+        $this->placementFinder = new Finder($this->placementValidator);
     }
 
     /**
      * @param PlayerGameState $initialGameState
      * @return GameResults
-     * @throws \Sagrada\IllegalBoardPlacementException
+     * @throws \Sagrada\DiePlacement\IllegalBoardPlacementException
      * @throws \Exception
      */
     public function simulateRandomPlayout(PlayerGameState $initialGameState): GameResults

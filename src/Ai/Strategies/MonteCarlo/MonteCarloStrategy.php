@@ -7,7 +7,7 @@ use Sagrada\Ai\NoAvailableMoveException;
 use Sagrada\Ai\Strategies\StrategyInterface;
 use Sagrada\Dice\SagradaDie;
 use Sagrada\DiePlacement;
-use Sagrada\DiePlacementFinder;
+use Sagrada\DiePlacement\Finder;
 use Sagrada\Game\PlayerGameState;
 
 /**
@@ -17,7 +17,7 @@ use Sagrada\Game\PlayerGameState;
 class MonteCarloStrategy implements StrategyInterface
 {
     /**
-     * @var DiePlacementFinder
+     * @var Finder
      */
     protected $diePlacementFinder;
     /**
@@ -27,10 +27,10 @@ class MonteCarloStrategy implements StrategyInterface
 
     /**
      * MonteCarloStrategy constructor.
-     * @param DiePlacementFinder $diePlacementFinder
+     * @param Finder $diePlacementFinder
      * @param MonteCarloSimulator $simulator
      */
-    public function __construct(DiePlacementFinder $diePlacementFinder, MonteCarloSimulator $simulator)
+    public function __construct(Finder $diePlacementFinder, MonteCarloSimulator $simulator)
     {
         $this->diePlacementFinder = $diePlacementFinder;
         $this->simulator = $simulator;

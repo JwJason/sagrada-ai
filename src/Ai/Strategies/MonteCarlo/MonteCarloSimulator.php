@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Sagrada\Ai\Strategies\MonteCarlo;
 
 use function DeepCopy\deep_copy;
-use Sagrada\DiePlacementFinder;
+use Sagrada\DiePlacement\Finder;
 use Sagrada\Game\PlayerGameState;
 use Sagrada\Game\GameResults;
 use Sagrada\DiePlacement;
@@ -22,15 +22,15 @@ use Sagrada\Scoring\Scorers\ColumnColorVariety;
 class MonteCarloSimulator
 {
     /**
-     * @var DiePlacementFinder
+     * @var Finder
      */
     protected $placementFinder;
 
     /**
      * MonteCarloSimulator constructor.
-     * @param DiePlacementFinder $placementFinder
+     * @param Finder $placementFinder
      */
-    public function __construct(DiePlacementFinder $placementFinder)
+    public function __construct(Finder $placementFinder)
     {
         $this->placementFinder = $placementFinder;
     }
@@ -45,7 +45,7 @@ class MonteCarloSimulator
         DiePlacement $initialDiePlacement,
         PlayerGameState $gameState
     ) : GameResults {
-        $this->debug("SIMULATOR: ==== Running new simulation ===");
+        $this->debug('===== Running new simulation =====');
 
         $gameStateCopy = deep_copy($gameState);
         $this->playMove($initialDiePlacement, $gameStateCopy);
@@ -88,13 +88,13 @@ class MonteCarloSimulator
         $validDiePlacements = $placementFinder->getAllValidDiePlacementsForDie($die, $board);
 
         if (empty($validDiePlacements)) {
-            $this->debug("SIMULATOR: (No valid move; passing)");
+            $this->debug('(No valid move; passing)');
             return $gameState;
         }
 
         $diePlacement = $validDiePlacements[array_rand($validDiePlacements)];
 
-        $this->debug("SIMULATOR: Placing die");
+        $this->debug('Placing die');
 
         $this->playMove($diePlacement, $gameState);
 
@@ -103,7 +103,6 @@ class MonteCarloSimulator
 
     protected function debug(string $message): void
     {
-        return;
-        echo $message . "\n";
+        echo sprintf('SIMULATOR: %s' . PHP_EOL, $message);
     }
 }

@@ -5,7 +5,7 @@ namespace Sagrada\Ai;
 
 use Sagrada\Ai\Strategies\StrategyInterface;
 use Sagrada\Dice\SagradaDie;
-use Sagrada\DiePlacementManager;
+use Sagrada\DiePlacement\BoardPlacer;
 use Sagrada\Game\PlayerGameState;
 
 class AiPlayer
@@ -13,7 +13,7 @@ class AiPlayer
     protected $diePlacementManager;
     protected $evaluationStrategy;
 
-    public function __construct(StrategyInterface $evaluationStrategy, DiePlacementManager $placementManager)
+    public function __construct(StrategyInterface $evaluationStrategy, BoardPlacer $placementManager)
     {
         $this->diePlacementManager = $placementManager;
         $this->evaluationStrategy = $evaluationStrategy;

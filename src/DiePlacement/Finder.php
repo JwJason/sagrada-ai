@@ -1,30 +1,30 @@
 <?php
 declare(strict_types=1);
 
-namespace Sagrada;
+namespace Sagrada\DiePlacement;
 
 use Sagrada\Board\Board;
 use Sagrada\Board\Grid\GridCoordinates;
 use Sagrada\Board\Iterators\RowIterator;
+use Sagrada\DiePlacement;
 use Sagrada\Dice\SagradaDie;
-use Sagrada\Validators\DiePlacementValidator;
 
 /**
- * Class DiePlacementFinder
+ * Class Finder
  * @package Sagrada\Validators
  */
-class DiePlacementFinder
+class Finder
 {
     /**
-     * @var DiePlacementValidator
+     * @var Validator
      */
     protected $placementValidator;
 
     /**
-     * DiePlacementFinder constructor.
-     * @param DiePlacementValidator $placementValidator
+     * Finder constructor.
+     * @param Validator $placementValidator
      */
-    public function __construct(DiePlacementValidator $placementValidator)
+    public function __construct(Validator $placementValidator)
     {
         $this->placementValidator = $placementValidator;
     }

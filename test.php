@@ -14,17 +14,17 @@ use Sagrada\Ai\Strategies\MonteCarlo\MonteCarloSimulator;
 use Sagrada\Ai\Strategies\MonteCarlo\MonteCarloStrategy;
 use Sagrada\Ai\Strategies\MonteCarloTree\MonteCarloTreeStrategy;
 use Sagrada\Ai\Strategies\MonteCarloTree\Uct;
-use Sagrada\Board\Board;
+use Sagrada\Board;
 use Sagrada\Board\Grid\GridCoordinates;
 use Sagrada\Board\Iterators\RowIterator;
-use Sagrada\Board\Meta;
 use Sagrada\Dice\DiceBag;
 use Sagrada\Dice\DiceDraftPool;
 use Sagrada\Dice\SagradaDie;
+use Sagrada\DiePlacement\BoardPlacer;
 use Sagrada\Game\PlayerGameState;
 use Sagrada\Player\SagradaPlayer;
 use Sagrada\Scoring\BoardScorer;
-use Sagrada\Validators\DiePlacementValidator;
+use Sagrada\DiePlacement\Validator;
 use Sagrada\Scoring\Scorers\ColumnColorVariety;
 use Sagrada\Scoring\Scorers\RowColorVariety;
 
@@ -34,13 +34,13 @@ const AMOUNT_OF_EACH_COLOR_DICE = 18;
 
 try {
     // Initialize
-    $meta = new Meta\Comitas();
-//    $meta = new Meta\SmallTestBoard();
-    $board = new Board($meta);
-    $player = new SagradaPlayer();
+    $meta = new Board\Meta\Comitas();
+//    $meta = new Board\Meta\SmallTestBoard();
+    $board = new Board\Board($meta);
+    $player = new SagradaPlayer($board);
     $diceBag = new DiceBag(AMOUNT_OF_EACH_COLOR_DICE);
-    $diePlacementValidator = new DiePlacementValidator();
-    $diePlacementManager = new DiePlacementManager($diePlacementValidator);
+    $diePlacementValidator = new Validator();
+    $diePlacementManager = new BoardPlacer($diePlacementValidator);
     $aiStrategy = new MonteCarloTreeStrategy(
         new GameSimulator(),
         new Uct()
@@ -56,7 +56,7 @@ try {
     $draftPool = new DiceDraftPool([]);
 
     // Example turns
-    $gameState = new PlayerGameState($board, $diceBag, $draftPool, $player, $diePlacementValidator);
+    $gameState = new PlayerGameState($board, $diceBag, $draftPool, $player);
     while ($gameState->hasTurnsRemaining()) {
         echo sprintf("TURN #%d\n", $gameState->getTurnsRemaining());
         echo sprintf("DICE LEFT: %d\n", $diceBag->getAllRemainingCount());

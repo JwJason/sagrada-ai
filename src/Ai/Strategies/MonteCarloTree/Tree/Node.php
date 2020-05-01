@@ -96,4 +96,12 @@ class Node
 
         return $children(array_rand($children));
     }
+
+    /**
+     * @return bool
+     */
+    public function hasChildren(): bool
+    {
+        return count($this->getChildArray()) > 0;
+    }
 }

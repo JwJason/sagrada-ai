@@ -6,9 +6,9 @@ namespace Sagrada\Ai\Strategies\MonteCarloTree;
 use function DeepCopy\deep_copy;
 use Sagrada\Dice\SagradaDie;
 use Sagrada\DiePlacement;
-use Sagrada\DiePlacementFinder;
+use Sagrada\DiePlacement\Finder;
 use Sagrada\Game\PlayerGameState;
-use Sagrada\Validators\DiePlacementValidator;
+use Sagrada\DiePlacement\Validator;
 
 /**
  * Class NodeState
@@ -102,7 +102,7 @@ class NodeData
 //    protected function getAllValidPlacementsForDie(SagradaDie $die)
 //    {
 //        $gameState = $this->getGameState();
-//        $placementFinder = new DiePlacementFinder(new DiePlacementValidator());
+//        $placementFinder = new Finder(new Validator());
 //        $board = $gameState->getBoard();
 //        $validDiePlacements = $placementFinder->getAllValidDiePlacementsForDie($die, $board);
 //        return $validDiePlacements;

@@ -7,7 +7,9 @@ use Sagrada\Ai\Strategies\MonteCarloTree\Tree\Node;
 
 class Uct
 {
-    public function debugChildNodes(Node $startingNode)
+    protected const MINIMUM_VISITS_PER_NODE = 50;
+
+    public function debugChildNodes(Node $startingNode): void
     {
         foreach ($startingNode->getChildArray() as $node) {
             echo sprintf(
@@ -43,7 +45,7 @@ class Uct
 
     public function getUctValue(int $parentVisitCount, int $nodeVisitCount, float $totalScore): float
     {
-        if ($nodeVisitCount === 0) {
+        if ($nodeVisitCount < self::MINIMUM_VISITS_PER_NODE) {
             return PHP_INT_MAX;
         }
         return ((float)$totalScore / (double)$nodeVisitCount)

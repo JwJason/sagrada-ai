@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Sagrada;
+namespace Sagrada\DiePlacement;
 
 class IllegalBoardPlacementException extends \Exception
 {

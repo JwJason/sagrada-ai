@@ -1,28 +1,28 @@
 <?php
 declare(strict_types=1);
 
-namespace Sagrada;
+namespace Sagrada\DiePlacement;
 
 use Sagrada\Board\Board;
+use Sagrada\DiePlacement;
 use Sagrada\DieSpace\DieSpace;
-use Sagrada\Validators\DiePlacementValidator;
 
 /**
- * Class DiePlacementManager
+ * Class BoardPlacer
  * @package Sagrada
  */
-class DiePlacementManager
+class BoardPlacer
 {
     /**
-     * @var DiePlacementValidator
+     * @var Validator
      */
     protected $placementValidator;
 
     /**
-     * DiePlacementManager constructor.
-     * @param DiePlacementValidator $placementValidator
+     * BoardPlacer constructor.
+     * @param Validator $placementValidator
      */
-    public function __construct(DiePlacementValidator $placementValidator)
+    public function __construct(Validator $placementValidator)
     {
         $this->placementValidator = $placementValidator;
     }
@@ -48,7 +48,7 @@ class DiePlacementManager
     public function putDiePlacementOnBoard(DiePlacement $diePlacement, Board $board): void
     {
         if ($this->canPutDiePlacementOnBoard($diePlacement, $board) === false) {
-            throw new IllegalBoardPlacementException("Invalid dice placement");
+            throw new IllegalBoardPlacementException(sprintf('Invalid die placement: %s', (string)$diePlacement));
         }
 
         $dieSpace = new DieSpace();
