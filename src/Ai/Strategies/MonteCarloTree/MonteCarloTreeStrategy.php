@@ -7,17 +7,10 @@ use Sagrada\Ai\Simulations\GameSimulator;
 use Sagrada\Ai\Strategies\MonteCarloTree\Tree\Node;
 use Sagrada\Ai\Strategies\MonteCarloTree\Tree\Tree;
 use Sagrada\Ai\Strategies\StrategyInterface;
-use Sagrada\Board\Board;
-use Sagrada\Dice\Color\DiceColorInterface;
 use Sagrada\Dice\SagradaDie;
 use Sagrada\DiePlacement;
-use Sagrada\DiePlacement\Finder;
-use Sagrada\DiePlacement\BoardPlacer;
-use Sagrada\Game\GameResults;
 use Sagrada\Game\PlayerGameState;
 use Sagrada\Game\Score;
-use Sagrada\DiePlacement\IllegalBoardPlacementException;
-use Sagrada\DiePlacement\Validator;
 
 class MonteCarloTreeStrategy implements StrategyInterface
 {
@@ -127,11 +120,11 @@ class MonteCarloTreeStrategy implements StrategyInterface
      */
     protected function expandNode(Node $node, SagradaDie $matchingDie): void
     {
+        $game = $this->getGameSimulator()->getGame();
         $gameState = $node->getData()->getGameState();
 
-        $placementValidator = new Validator();
-        $placementFinder = new Finder($placementValidator);
-        $placementManager = new BoardPlacer($placementValidator);
+        $placementFinder = $game->getPlacementFinder();
+        $placementManager = $game->getPlacementPlacer();
 
         $gameStateCopy = $gameState->deepCopy();
         $gameStateCopy->decrementTurnsRemaining();
@@ -159,5 +152,21 @@ class MonteCarloTreeStrategy implements StrategyInterface
             $node->getData()->increaseAggregateScore($score->getTotal());
             $node = $node->getParent();
         }
+    }
+
+    /**
+     * @return GameSimulator
+     */
+    public function getGameSimulator(): GameSimulator
+    {
+        return $this->gameSimulator;
+    }
+
+    /**
+     * @return Uct
+     */
+    public function getUct(): Uct
+    {
+        return $this->uct;
     }
 }

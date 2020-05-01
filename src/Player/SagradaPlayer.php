@@ -14,5 +14,13 @@ class SagradaPlayer
     {
         $this->board = $board;
     }
+
+    /**
+     * @return Board
+     */
+    public function getBoard(): Board
+    {
+        return $this->board;
+    }
 }
 

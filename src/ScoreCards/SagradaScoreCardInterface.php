@@ -5,5 +5,4 @@ namespace Sagrada\ScoreCards;
 
 interface SagradaScoreCardInterface
 {
-
 }

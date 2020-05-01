@@ -3,15 +3,11 @@ declare(strict_types=1);
 
 namespace Sagrada\Ai\Simulations;
 
-use Sagrada\DiePlacement\Finder;
-use Sagrada\DiePlacement\BoardPlacer;
 use Sagrada\Game\GameResults;
 use Sagrada\Game\PlayerGameState;
 use Sagrada\Game\Score;
-use Sagrada\Scoring\BoardScorer;
-use Sagrada\DiePlacement\Validator;
-use Sagrada\Scoring\Scorers\RowColorVariety;
-use Sagrada\Scoring\Scorers\ColumnColorVariety;
+use Sagrada\GameRunner;
+use Sagrada\Scoring\Scorers\FromSagradaScoreCardFactory;
 
 /**
  * Class GameSimulator
@@ -19,27 +15,15 @@ use Sagrada\Scoring\Scorers\ColumnColorVariety;
  */
 class GameSimulator
 {
-    /**
-     * @var Finder
-     */
-    protected $placementFinder;
-    /**
-     * @var BoardPlacer
-     */
-    protected $placementManager;
-    /**
-     * @var Validator
-     */
-    protected $placementValidator;
+    /** @var GameRunner */
+    protected $game;
 
     /**
      * GameSimulator constructor.
      */
-    public function __construct()
+    public function __construct(GameRunner $game)
     {
-        $this->placementValidator = new Validator();
-        $this->placementManager = new BoardPlacer($this->placementValidator);
-        $this->placementFinder = new Finder($this->placementValidator);
+        $this->game = $game;
     }
 
     /**
@@ -51,8 +35,8 @@ class GameSimulator
     public function simulateRandomPlayout(PlayerGameState $initialGameState): GameResults
     {
         $gameState = $initialGameState->deepCopy();
-        $placementFinder = $this->placementFinder;
-        $placementManager = $this->placementManager;
+        $placementFinder = $this->game->getPlacementFinder();
+        $placementManager = $this->game->getPlacementPlacer();
 
         while ($gameState->hasTurnsRemaining() && $gameState->hasAnyPossibleMovesRemaining()) {
             $gameState->decrementTurnsRemaining();
@@ -82,13 +66,16 @@ class GameSimulator
      */
     protected function scoreGame(PlayerGameState $gameState): Score
     {
-        $board = $gameState->getBoard();
+        $scorerFactory = new FromSagradaScoreCardFactory();
+        $boardScorer = $scorerFactory->createFromScoreCardCollection($this->getGame()->getScoreCards(), $gameState->getBoard());
+        return new Score($boardScorer->getScore());
+    }
 
-        $scorer = new BoardScorer([
-            new RowColorVariety\Scorer($board),
-            new ColumnColorVariety\Scorer($board)
-        ]);
-
-        return new Score($scorer->getScore());
+    /**
+     * @return GameRunner
+     */
+    public function getGame(): GameRunner
+    {
+        return $this->game;
     }
 }

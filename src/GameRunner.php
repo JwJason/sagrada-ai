@@ -3,18 +3,38 @@ declare(strict_types=1);
 
 namespace Sagrada;
 
+use Sagrada\ScoreCards\SagradaScoreCardCollection;
+use Sagrada\Scoring\BoardScorer;
+use Sagrada\Scoring\Scorers\FromSagradaScoreCardFactory;
+
 class GameRunner
 {
     /** @var DiePlacement\Finder */
     protected $placementFinder;
     /** @var DiePlacement\BoardPlacer */
-    protected $placementManager;
+    protected $placementPlacer;
     /** @var DiePlacement\Validator */
     protected $placementValidator;
     /** @var Player\SagradaPlayer */
     protected $player1;
     /** @var Player\SagradaPlayer */
     protected $player2;
+    /** @var SagradaScoreCardCollection */
+    protected $scoreCards;
+
+    public function getPlayer1BoardScore(): int
+    {
+        $scorerFactory = new FromSagradaScoreCardFactory();
+        $boardScorer = $scorerFactory->createFromScoreCardCollection($this->getScoreCards(), $this->getPlayer1()->getBoard());
+        return $boardScorer->getScore();
+    }
+
+    public function getPlayer2BoardScore(): int
+    {
+        $scorerFactory = new FromSagradaScoreCardFactory();
+        $boardScorer = $scorerFactory->createFromScoreCardCollection($this->getScoreCards(), $this->getPlayer2()->getBoard());
+        return $boardScorer->getScore();
+    }
 
     /**
      * @return DiePlacement\Finder
@@ -35,17 +55,17 @@ class GameRunner
     /**
      * @return DiePlacement\BoardPlacer
      */
-    public function getPlacementManager(): DiePlacement\BoardPlacer
+    public function getPlacementPlacer(): DiePlacement\BoardPlacer
     {
-        return $this->placementManager;
+        return $this->placementPlacer;
     }
 
     /**
-     * @param DiePlacement\BoardPlacer $placementManager
+     * @param DiePlacement\BoardPlacer $placementPlacer
      */
-    public function setPlacementManager(DiePlacement\BoardPlacer $placementManager): void
+    public function setPlacementPlacer(DiePlacement\BoardPlacer $placementPlacer): void
     {
-        $this->placementManager = $placementManager;
+        $this->placementPlacer = $placementPlacer;
     }
 
     /**
@@ -62,5 +82,53 @@ class GameRunner
     public function setPlacementValidator(DiePlacement\Validator $placementValidator): void
     {
         $this->placementValidator = $placementValidator;
+    }
+
+    /**
+     * @return Player\SagradaPlayer
+     */
+    public function getPlayer1(): Player\SagradaPlayer
+    {
+        return $this->player1;
+    }
+
+    /**
+     * @param Player\SagradaPlayer $player1
+     */
+    public function setPlayer1(Player\SagradaPlayer $player1): void
+    {
+        $this->player1 = $player1;
+    }
+
+    /**
+     * @return Player\SagradaPlayer
+     */
+    public function getPlayer2(): Player\SagradaPlayer
+    {
+        return $this->player2;
+    }
+
+    /**
+     * @param Player\SagradaPlayer $player2
+     */
+    public function setPlayer2(Player\SagradaPlayer $player2): void
+    {
+        $this->player2 = $player2;
+    }
+
+    /**
+     * @return SagradaScoreCardCollection
+     */
+    public function getScoreCards(): SagradaScoreCardCollection
+    {
+        return $this->scoreCards;
+    }
+
+    /**
+     * @param SagradaScoreCardCollection $scoreCards
+     */
+    public function setScoreCards(SagradaScoreCardCollection $scoreCards): void
+    {
+        $this->scoreCards = $scoreCards;
     }
 }
