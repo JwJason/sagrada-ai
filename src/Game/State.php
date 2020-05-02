@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Sagrada\Game;
 
 use function DeepCopy\deep_copy;
-use mysql_xdevapi\Exception;
 use Sagrada\DiceBag;
 use Sagrada\DieCollection;
 use Sagrada\Game;

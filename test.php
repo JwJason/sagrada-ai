@@ -86,7 +86,13 @@ try {
         echo sprintf("DRAFT POOL %s\n", $gameState->getDraftPool());
         $diePlacement = $aiStrategy->getBestDiePlacement($gameState);
         if ($diePlacement) {
-            $gameState = $gameSimulator->simulateTurn($gameState, $diePlacement);
+//            $gameState = $gameSimulator->simulateTurn($gameState->deepCopy(), $diePlacement);
+            $player = $gameState->getCurrentPlayer();
+            $board = $player->getState()->getBoard();
+
+            $gameState->getDraftPool()->remove($diePlacement->getDie());
+            $gameState->getGame()->getPlacementPlacer()->putDiePlacementOnBoard($diePlacement, $board);
+            $gameState->nextTurn();
         } else {
             $gameState->nextTurn();
         }
@@ -108,83 +114,3 @@ try {
  *      - Also factor in the second player's turn, based on the other player's best available play
  * - Also calculate the potential score he could get with each dice placement (the ideal end-game board)
  */
-
-///**
-// * @param SagradaDie $die
-// * @param TurnDirector $director
-// * @throws \Exception
-// */
-//function boardPlacement(SagradaDie $die, TurnDirector $director): void
-//{
-//    $board = $director->getBoard();
-//    $probabilityCalculator = new ProbabilityCalculator();
-//    $probabilityData = [];
-//
-//    $placementColorProbability =
-//
-//    $iterator = new RowIterator($board);
-//
-//    // Get all color placement probabilities
-//    // TODO
-//
-//    // Get all value placement probabilities
-//    // TODO
-//
-//
-//    // Get probability data for all valid placements
-//    foreach ($iterator as $rowIndex => $row) {
-//        foreach ($row->getItems() as $colIndex => $space) {
-//            $coordinates = new GridCoordinates($rowIndex, $colIndex);
-//            $diePlacement = new DiePlacement($die, $coordinates);
-//
-//            if ($director->getPlacementValidator()->isValidDiePlacement($diePlacement, $board)) {
-////                $placementProbability = $probabilityCalculator->getProbabilityOfAnyValidMoveOnSpace(
-////                    $space,
-////                    $director->getDiceBag(),
-////                    $director->getReferee()
-////                );
-//
-////                $placementProbability = $probabilityCalculator->get
-//
-//
-//                // Get probability data for all valid color placements on this space
-//                // TODO
-//
-//                // Get probability data for all valid value placements on this space
-//                // TODO
-//
-//                // Use value + color probability to get total probability
-//                // TODO
-//
-//                $probabilityData[] = [
-//                    'boardSpace'  => $space,
-//                    'probability' => $placementProbability
-//                ];
-//            }
-//        }
-//    }
-//
-//    // Filter probability data to the lowest probability placements only
-//    $lowestPlacementProbabilities = [];
-//    $lowestPlacementProbability = 1;
-//    foreach ($probabilityData as $probabilityDatum) {
-//        $probability = $probabilityDatum['probability'];
-//        if ($probability === $lowestPlacementProbability) {
-//            $lowestPlacementProbabilities[] = $probabilityDatum;
-//        } elseif ($probability < $lowestPlacementProbability) {
-//            $lowestPlacementProbability = [$probabilityDatum];
-//        }
-//    }
-//
-//    // Filter probability data to spaces with intrinsic restrictions only
-//    foreach ($lowestPlacementProbabilities as $probabilityDatum) {
-//        // TODO
-//    }
-//
-//    // For each remaining space:
-//    //   Weigh each of that remaining space's valid color + value combos, based on if playing that combo would introduce
-//    //   more restrictions to adjacent spaces
-//        // TODO
-//    //  When possible (depending on the active Scoring cards), determine which color + value combos would nullify
-//    //  or achieve scoring combos like row color combo, etc (can we do this probabilistically?)
-//}

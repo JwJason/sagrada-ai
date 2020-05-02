@@ -19,6 +19,8 @@ class GameSimulator
 
         while ($gameState->hasRoundsRemaining()) {
             $gameState = $this->simulateRandomTurn($gameState);
+            echo "after simulateRandomTurn()";
+            echo memory_get_usage() . "\n";
         }
 
         // TODO- Remove hard-coded assumption that AI player is player 1
@@ -30,7 +32,7 @@ class GameSimulator
 
     public function simulateTurn(Game\State $initialGameState, DiePlacement $diePlacement): Game\State
     {
-        $gameState = $initialGameState->deepCopy();
+        $gameState = $initialGameState;
         $player = $gameState->getCurrentPlayer();
         $board = $player->getState()->getBoard();
 
@@ -41,9 +43,8 @@ class GameSimulator
         return $gameState;
     }
 
-    public function simulateRandomTurn(Game\State $initialGameState): Game\State
+    public function simulateRandomTurn(Game\State $gameState): Game\State
     {
-        $gameState = $initialGameState->deepCopy();
         $placementFinder = $gameState->getGame()->getPlacementFinder();
         $placementPlacer = $gameState->getGame()->getPlacementPlacer();
 
