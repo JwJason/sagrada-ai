@@ -10,38 +10,29 @@ use function DeepCopy\deep_copy;
 use Sagrada\Ai\AiPlayer;
 use Sagrada\Ai\ProbabilityCalculator;
 use Sagrada\Ai\Simulations\GameSimulator;
-use Sagrada\Ai\Strategies\MonteCarlo\MonteCarloSimulator;
-use Sagrada\Ai\Strategies\MonteCarlo\MonteCarloStrategy;
 use Sagrada\Ai\Strategies\MonteCarloTree\MonteCarloTreeStrategy;
 use Sagrada\Ai\Strategies\MonteCarloTree\Uct;
 use Sagrada\Board;
 use Sagrada\Board\Grid\GridCoordinates;
 use Sagrada\Board\Iterators\RowIterator;
-use Sagrada\Dice\DiceBag;
-use Sagrada\Dice\DiceDraftPool;
+use Sagrada\DiceBag;
 use Sagrada\Dice\SagradaDie;
 use Sagrada\DiePlacement\BoardPlacer;
 use Sagrada\DiePlacement\Finder;
-use Sagrada\Game\PlayerGameState;
+use Sagrada\Game\PlayerState;
+use Sagrada\Game\State;
 use Sagrada\Player\SagradaPlayer;
 use Sagrada\ScoreCards\Cards;
 use Sagrada\ScoreCards\SagradaScoreCardCollection;
-use Sagrada\Scoring\BoardScorer;
 use Sagrada\DiePlacement\Validator;
-use Sagrada\Scoring\Scorers\ColumnColorVariety;
 use Sagrada\Scoring\Scorers\FromSagradaScoreCardFactory;
-use Sagrada\Scoring\Scorers\RowColorVariety;
 
 const DRAFT_POOL_SIZE = 5;
 
 const AMOUNT_OF_EACH_COLOR_DICE = 18;
 
-function initializeGame(): GameRunner
+function initializeGame(): Game
 {
-    $meta = new Board\Meta\Comitas();
-    $board = new Board\Board($meta);
-    $player1 = new SagradaPlayer($board);
-    $player2 = new SagradaPlayer($board);
     $placementValidator = new Validator();
     $placementFinder = new Finder($placementValidator);
     $placementPlacer = new BoardPlacer($placementValidator);
@@ -50,48 +41,60 @@ function initializeGame(): GameRunner
     $scoreCards->addScoreCard(new Cards\RowColorVariety());
     $scoreCards->addScoreCard(new Cards\ColumnColorVariety());
 
-    $game = new GameRunner();
-    $game->setPlayer1($player1);
-    $game->setPlayer2($player2);
+    $game = new Game();
     $game->setPlacementFinder($placementFinder);
     $game->setPlacementPlacer($placementPlacer);
     $game->setPlacementValidator($placementValidator);
     $game->setScoreCards($scoreCards);
+    $game->setDraftPoolSize(5);
+
+    $gameState = new State();
+    $gameState->setDiceBag(new DiceBag(AMOUNT_OF_EACH_COLOR_DICE));
+    $gameState->setGame($game);
+
+    $aiPlayer = new SagradaPlayer();
+    $aiPlayerBoard = new Board\Board(new Board\Meta\Comitas());
+    $aiPlayer->setName('AI');
+    $aiPlayer->setState(new PlayerState($aiPlayer, $aiPlayerBoard, $game));
+
+    $humanPlayer = new SagradaPlayer();
+    $humanPlayer->setName('Human');
+    $humanPlayerBoard = new Board\Board(new Board\Meta\Comitas());
+    $humanPlayer->setState(new PlayerState($humanPlayer, $humanPlayerBoard, $game));
+
+    $game->setState($gameState);
+    $game->setPlayers([$aiPlayer, $humanPlayer]);
 
     return $game;
 }
 
 try {
     $game = initializeGame();
-    $diceBag = new DiceBag(AMOUNT_OF_EACH_COLOR_DICE);
+    $gameSimulator = new GameSimulator();
+
     $aiStrategy = new MonteCarloTreeStrategy(
-        new GameSimulator($game),
+        $gameSimulator,
         new Uct()
     );
-    $aiPlayer = new AiPlayer($aiStrategy, $game->getPlacementPlacer());
-
-    // Example round start
-//    $dice = [];
-//    for ($i = 0; $i < DRAFT_POOL_SIZE; ++$i) {
-//        $dice[] = $diceBag->drawDie();
-//    }
-//    $draftPool = new DiceDraftPool($dice);
-    $draftPool = new DiceDraftPool([]);
 
     // Example turns
-    $gameState = new PlayerGameState($game->getPlayer1()->getBoard(), $diceBag, $draftPool, $game->getPlayer1());
-    while ($gameState->hasTurnsRemaining()) {
-        echo sprintf("TURN #%d\n", $gameState->getTurnsRemaining());
-        echo sprintf("DICE LEFT: %d\n", $diceBag->getAllRemainingCount());
-        $die = $diceBag->drawDie();
-        $aiPlayer->takeTurn($die, $gameState);
-        echo $gameState->getBoard() . "\n";
+    $gameState = $game->getState();
+    $gameState->initializeFirstRound();
+    while ($gameState->hasRoundsRemaining()) {
+        echo sprintf("ROUND #%d\n", $gameState->getCurrentRound());
+        echo sprintf("CURRENT PLAYER: %s\n", $gameState->getCurrentPlayer()->getName());
+        echo sprintf("DRAFT POOL %s\n", $gameState->getDraftPool());
+        $diePlacement = $aiStrategy->getBestDiePlacement($gameState);
+        if ($diePlacement) {
+            $gameState = $gameSimulator->simulateTurn($gameState, $diePlacement);
+        } else {
+            $gameState->nextTurn();
+        }
+        echo $gameState->getCurrentPlayer()->getState()->getBoard() . "\n";
     }
 
-    $scorer = (new FromSagradaScoreCardFactory())
-        ->createFromScoreCardCollection($game->getScoreCards(), $gameState->getBoard());
 //    echo "Number of occurances: " . $scorer->getNumberOfOccurances() . "\n";
-    echo "Player 1 Score: " . $scorer->getScore() . "\n";
+//    echo "Player 1 Score: " . $gameState->getPlayerState()->getScore() . "\n";
 } catch (\Throwable $t) {
     throw $t;
 }

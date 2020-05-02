@@ -3,37 +3,43 @@ declare(strict_types=1);
 
 namespace Sagrada;
 
+use Sagrada\Game\State;
 use Sagrada\ScoreCards\SagradaScoreCardCollection;
-use Sagrada\Scoring\BoardScorer;
-use Sagrada\Scoring\Scorers\FromSagradaScoreCardFactory;
 
-class GameRunner
+class Game
 {
+    public const TOTAL_NUMBER_OF_ROUNDS = 10;
+    public const TURNS_PER_PLAYER_PER_ROUND = 2;
+
+    /** @var int */
+    protected $draftPoolSize;
     /** @var DiePlacement\Finder */
     protected $placementFinder;
     /** @var DiePlacement\BoardPlacer */
     protected $placementPlacer;
     /** @var DiePlacement\Validator */
     protected $placementValidator;
-    /** @var Player\SagradaPlayer */
-    protected $player1;
-    /** @var Player\SagradaPlayer */
-    protected $player2;
+    /** @var array */
+    protected $players;
     /** @var SagradaScoreCardCollection */
     protected $scoreCards;
+    /** @var State */
+    protected $state;
 
-    public function getPlayer1BoardScore(): int
+    /**
+     * @return int
+     */
+    public function getDraftPoolSize(): int
     {
-        $scorerFactory = new FromSagradaScoreCardFactory();
-        $boardScorer = $scorerFactory->createFromScoreCardCollection($this->getScoreCards(), $this->getPlayer1()->getBoard());
-        return $boardScorer->getScore();
+        return $this->draftPoolSize;
     }
 
-    public function getPlayer2BoardScore(): int
+    /**
+     * @param int $draftPoolSize
+     */
+    public function setDraftPoolSize(int $draftPoolSize): void
     {
-        $scorerFactory = new FromSagradaScoreCardFactory();
-        $boardScorer = $scorerFactory->createFromScoreCardCollection($this->getScoreCards(), $this->getPlayer2()->getBoard());
-        return $boardScorer->getScore();
+        $this->draftPoolSize = $draftPoolSize;
     }
 
     /**
@@ -85,35 +91,19 @@ class GameRunner
     }
 
     /**
-     * @return Player\SagradaPlayer
+     * @return array
      */
-    public function getPlayer1(): Player\SagradaPlayer
+    public function getPlayers(): array
     {
-        return $this->player1;
+        return $this->players;
     }
 
     /**
-     * @param Player\SagradaPlayer $player1
+     * @param $players
      */
-    public function setPlayer1(Player\SagradaPlayer $player1): void
+    public function setPlayers(array $players): void
     {
-        $this->player1 = $player1;
-    }
-
-    /**
-     * @return Player\SagradaPlayer
-     */
-    public function getPlayer2(): Player\SagradaPlayer
-    {
-        return $this->player2;
-    }
-
-    /**
-     * @param Player\SagradaPlayer $player2
-     */
-    public function setPlayer2(Player\SagradaPlayer $player2): void
-    {
-        $this->player2 = $player2;
+        $this->players = $players;
     }
 
     /**
@@ -130,5 +120,21 @@ class GameRunner
     public function setScoreCards(SagradaScoreCardCollection $scoreCards): void
     {
         $this->scoreCards = $scoreCards;
+    }
+
+    /**
+     * @return State
+     */
+    public function getState(): State
+    {
+        return $this->state;
+    }
+
+    /**
+     * @param State $state
+     */
+    public function setState(State $state): void
+    {
+        $this->state = $state;
     }
 }

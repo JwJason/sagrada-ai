@@ -4,11 +4,8 @@ declare(strict_types=1);
 namespace Sagrada\Ai\Strategies\MonteCarloTree;
 
 use function DeepCopy\deep_copy;
-use Sagrada\Dice\SagradaDie;
 use Sagrada\DiePlacement;
-use Sagrada\DiePlacement\Finder;
-use Sagrada\Game\PlayerGameState;
-use Sagrada\DiePlacement\Validator;
+use Sagrada\Game;
 
 /**
  * Class NodeState
@@ -18,18 +15,13 @@ use Sagrada\DiePlacement\Validator;
 class NodeData
 {
     /**
-     * @var mixed
+     * @var Game\State
      */
     protected $gameState;
     /**
      * @var DiePlacement|null
      */
     protected $lastDiePlacement;
-    /**
-     * @var SagradaDie
-     */
-    // XXX TODO DELETE THIS
-    protected $currentDie;
     /**
      * @var int
      */
@@ -39,25 +31,15 @@ class NodeData
      */
     protected $visitCount;
 
-    /**
-     * NodeState constructor.
-     * @param PlayerGameState $gameState
-     * @param DiePlacement $lastDiePlacement
-     * @param SagradaDie $currentDie
-     */
-    public function __construct(PlayerGameState $gameState, ?DiePlacement $lastDiePlacement/*, SagradaDie $currentDie*/)
+    public function __construct(Game\State $gameState, ?DiePlacement $lastDiePlacement)
     {
         $this->gameState = deep_copy($gameState);
         $this->lastDiePlacement = $lastDiePlacement;
-//        $this->currentDie = $currentDie;
         $this->visitCount = 0;
         $this->aggregateScore = 0;
     }
 
-    /**
-     * @return PlayerGameState
-     */
-    public function getGameState(): PlayerGameState
+    public function getGameState(): Game\State
     {
         return $this->gameState;
     }
@@ -69,14 +51,6 @@ class NodeData
     {
         return $this->lastDiePlacement;
     }
-
-//    /**
-//     * @return SagradaDie
-//     */
-//    public function getCurrentDie(): SagradaDie
-//    {
-//        return $this->currentDie;
-//    }
 
     /**
      * @return int
@@ -92,6 +66,22 @@ class NodeData
     public function incrementVisitCount(): void
     {
         ++$this->visitCount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAggregateScore(): int
+    {
+        return $this->aggregateScore;
+    }
+
+    /**
+     * @param int $amount
+     */
+    public function increaseAggregateScore(int $amount): void
+    {
+        $this->aggregateScore += $amount;
     }
 
 //    /**
@@ -111,9 +101,9 @@ class NodeData
 //    /**
 //     * @param DiePlacement $diePlacement
 //     * @throws \Exception
-//     * @return PlayerGameState
+//     * @return PlayerState
 //     */
-//    public function playTurnWithDiePlacement(DiePlacement $diePlacement): PlayerGameState
+//    public function playTurnWithDiePlacement(DiePlacement $diePlacement): PlayerState
 //    {
 //        $gameState = $this->getGameState();
 //        $gameState->decrementTurnsRemaining();
@@ -122,10 +112,10 @@ class NodeData
 //    }
 //
 //    /**
-//     * @return PlayerGameState
+//     * @return PlayerState
 //     * @throws \Exception
 //     */
-//    public function playRandomDieDrawAndTurn(): PlayerGameState
+//    public function playRandomDieDrawAndTurn(): PlayerState
 //    {
 //        $gameState = $this->getGameState();
 //        $gameState->decrementTurnsRemaining();
@@ -142,29 +132,14 @@ class NodeData
 //        return $gameState;
 //    }
 
-    /**
-     * @return bool
-     */
-    public function hasPlayableTurnsRemaining(): bool
-    {
-        $gameState = $this->getGameState();
-        return $gameState->hasTurnsRemaining() && $gameState->hasAnyPossibleMovesRemaining();
-    }
+//    /**
+//     * @return bool
+//     */
+//    public function hasPlayableTurnsRemaining(): bool
+//    {
+//        $gameState = $this->getGameState();
+//        return $gameState->hasTurnsRemaining() && $gameState->hasAnyPossibleMovesRemaining();
+//    }
 
-    /**
-     * @return int
-     */
-    public function getAggregateScore(): int
-    {
-        return $this->aggregateScore;
-    }
-
-    /**
-     * @param int $amount
-     */
-    public function increaseAggregateScore(int $amount): void
-    {
-        $this->aggregateScore += $amount;
-    }
 }
 

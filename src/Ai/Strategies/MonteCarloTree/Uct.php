@@ -9,19 +9,6 @@ class Uct
 {
     protected const MINIMUM_VISITS_PER_NODE = 50;
 
-    public function debugChildNodes(Node $startingNode): void
-    {
-        foreach ($startingNode->getChildArray() as $node) {
-            echo sprintf(
-                "Play=%s|AggregateScore=%f|AvgScore=%f|Visits=%d\n",
-                $node->getData()->getLastDiePlacement(),
-                $node->getData()->getAggregateScore(),
-                $node->getData()->getAggregateScore() / $node->getData()->getVisitCount(),
-                $node->getData()->getVisitCount()
-            );
-        }
-    }
-
     public function findBestNodeWithUct(Node $startingNode): ?Node
     {
         $parentVisitCount = $startingNode->getData()->getVisitCount();

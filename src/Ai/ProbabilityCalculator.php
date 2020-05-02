@@ -5,7 +5,7 @@ namespace Sagrada\Ai;
 
 use Sagrada\Board\Space\BoardSpace;
 use Sagrada\Dice\Color\DiceColorInterface;
-use Sagrada\Dice\DiceBag;
+use Sagrada\DiceBag;
 use Sagrada\Dice\Value\DiceValueManager;
 use Sagrada\DiePlacement;
 use Sagrada\Validators\PlacementFinder;

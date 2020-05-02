@@ -5,32 +5,44 @@ namespace Sagrada\Ai;
 
 use Sagrada\Ai\Strategies\StrategyInterface;
 use Sagrada\Dice\SagradaDie;
-use Sagrada\DiePlacement\BoardPlacer;
-use Sagrada\Game\PlayerGameState;
+use Sagrada\DieCollection;
+use Sagrada\Game;
 
 class AiPlayer
 {
-    protected $diePlacementManager;
+    /** @var StrategyInterface */
     protected $evaluationStrategy;
+    /** @var Game */
+    protected $game;
 
-    public function __construct(StrategyInterface $evaluationStrategy, BoardPlacer $placementManager)
+    public function __construct(StrategyInterface $evaluationStrategy, Game $game)
     {
-        $this->diePlacementManager = $placementManager;
         $this->evaluationStrategy = $evaluationStrategy;
+        $this->game = $game;
+    }
+
+    public function takeTurn(Game\State $gameState): void
+    {
+        echo "AI Evaluating...\n";
+        $bestDiePlacement = $this->getEvaluationStrategy()->getBestDiePlacement($gameState);
+        if ($bestDiePlacement) {
+            $this->getGame()->getPlacementPlacer()->putDiePlacementOnBoard($bestDiePlacement, $gameState->getPlayerState()->getBoard());
+        }
     }
 
     /**
-     * @param SagradaDie $die
-     * @param PlayerGameState $gameState
-     * @throws \Exception
+     * @return StrategyInterface
      */
-    public function takeTurn(SagradaDie $die, PlayerGameState $gameState): void
+    public function getEvaluationStrategy(): StrategyInterface
     {
-        $gameState->decrementTurnsRemaining();
-        echo sprintf("Evaluating play for die %s\n", $die);
-        $bestDiePlacement = $this->evaluationStrategy->getBestDiePlacement($die, $gameState);
-        if ($bestDiePlacement) {
-            $this->diePlacementManager->putDiePlacementOnBoard($bestDiePlacement, $gameState->getBoard());
-        }
+        return $this->evaluationStrategy;
+    }
+
+    /**
+     * @return Game
+     */
+    public function getGame(): Game
+    {
+        return $this->game;
     }
 }

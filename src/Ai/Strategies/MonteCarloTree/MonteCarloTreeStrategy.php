@@ -8,8 +8,10 @@ use Sagrada\Ai\Strategies\MonteCarloTree\Tree\Node;
 use Sagrada\Ai\Strategies\MonteCarloTree\Tree\Tree;
 use Sagrada\Ai\Strategies\StrategyInterface;
 use Sagrada\Dice\SagradaDie;
+use Sagrada\DieCollection;
 use Sagrada\DiePlacement;
-use Sagrada\Game\PlayerGameState;
+use Sagrada\Game;
+use Sagrada\Game\PlayerState;
 use Sagrada\Game\Score;
 
 class MonteCarloTreeStrategy implements StrategyInterface
@@ -30,24 +32,19 @@ class MonteCarloTreeStrategy implements StrategyInterface
         $this->uct = $uct;
     }
 
-    /**
-     * @param PlayerGameState $gameState
-     * @param SagradaDie $die
-     * @return DiePlacement
-     * @throws \Exception
-     */
-    public function getBestDiePlacement(SagradaDie $die, PlayerGameState $gameState): ?DiePlacement
+    public function getBestDiePlacement(Game\State $gameState): ?DiePlacement
     {
         $tree = $this->createTreeFromGameState($gameState);
         $endTime = time() + 12;
         $rootNode = $tree->getRootNode();
-
-        while (time() < $endTime) {
+        // DEBUG
+        for ($i = 0; $i < 20000; $i++) {
+//        while (time() < $endTime) {
             $node = $this->selectPromisingNode($rootNode);
             $nodeToExplore = $node;
 
             if (empty($node->getChildArray())) {
-                $this->expandNode($node, $die);
+                $this->expandNode($node);
             }
 
             $childNodes = $node->getChildArray();
@@ -60,18 +57,66 @@ class MonteCarloTreeStrategy implements StrategyInterface
             $this->backPropagateNodeData($nodeToExplore, $gameResult->getScore());
         }
 
-        $this->uct->debugChildNodes($rootNode);
+        $this->debugChildNodes($rootNode);
 
         $bestNode = $this->getChildWithMaxScore($rootNode);
 
-        if ($bestNode) {
-            return $bestNode->getData()->getLastDiePlacement();
-        } else {
+        if (!$bestNode) {
             return null;
+        }
+        return $bestNode->getData()->getLastDiePlacement();
+    }
+
+//    public function getBestDiePlacement(SagradaDie $die, Game\State $gameState): ?DiePlacement
+//    {
+//        $tree = $this->createTreeFromGameState($gameState);
+//        $endTime = time() + 12;
+//        $rootNode = $tree->getRootNode();
+//
+//        // DEBUG
+//        for ($i = 0; $i < 20000; $i++) {
+////        while (time() < $endTime) {
+//            $node = $this->selectPromisingNode($rootNode);
+//            $nodeToExplore = $node;
+//
+//            if (empty($node->getChildArray())) {
+//                $this->expandNode($node, $die);
+//            }
+//
+//            $childNodes = $node->getChildArray();
+//
+//            if (!empty($childNodes)) {
+//                $nodeToExplore = $childNodes[array_rand($childNodes)];
+//            }
+//
+//            $gameResult = $this->gameSimulator->simulateRandomPlayout($nodeToExplore->getData()->getGameState());
+//            $this->backPropagateNodeData($nodeToExplore, $gameResult->getScore());
+//        }
+//
+//        $this->debugChildNodes($rootNode);
+//
+//        $bestNode = $this->getChildWithMaxScore($rootNode);
+//
+//        if (!$bestNode) {
+//            return null;
+//        }
+//        return $bestNode->getData()->getLastDiePlacement();
+//    }
+
+    public function debugChildNodes(Node $startingNode): void
+    {
+        foreach ($startingNode->getChildArray() as $node) {
+            echo sprintf(
+                "Play=%s|AggregateScore=%f|AvgScore=%f|Visits=%d\n",
+                $node->getData()->getLastDiePlacement(),
+                $node->getData()->getAggregateScore(),
+                $node->getData()->getAggregateScore() / $node->getData()->getVisitCount(),
+                $node->getData()->getVisitCount()
+            );
         }
     }
 
-    protected function createTreeFromGameState(PlayerGameState $gameState): Tree
+    protected function createTreeFromGameState(Game\State $gameState): Tree
     {
         return new Tree(new Node(new NodeData($gameState, null)));
     }
@@ -112,31 +157,28 @@ class MonteCarloTreeStrategy implements StrategyInterface
     }
 
     /**
-     * Adds child nodes to the node, which represent every potential play (dice roll + possible placements of that roll).
+     * Adds child nodes to the node, which represents every potential play from the dice draft pool.
      *
      * @param Node $node
-     * @param SagradaDie $matchingDie
      * @throws \Exception
      */
-    protected function expandNode(Node $node, SagradaDie $matchingDie): void
+    protected function expandNode(Node $node): void
     {
-        $game = $this->getGameSimulator()->getGame();
         $gameState = $node->getData()->getGameState();
+        $game = $gameState->getGame();
 
         $placementFinder = $game->getPlacementFinder();
-        $placementManager = $game->getPlacementPlacer();
 
-        $gameStateCopy = $gameState->deepCopy();
-        $gameStateCopy->decrementTurnsRemaining();
-        $gameStateCopy->getDiceBag()->removeOneDieOfColor($matchingDie->getColor());
+        $placements = $placementFinder->getAllValidDiePlacementsForDieCollection(
+            $gameState->getDraftPool(),
+            $gameState->getCurrentPlayer()->getState()->getBoard()
+        );
 
-        $placements = $placementFinder->getAllValidDiePlacementsForDie($matchingDie, $gameStateCopy->getBoard());
-
+        /** @var DiePlacement $placement */
         foreach ($placements as $placement) {
-            $gameStateCopyCopy = $gameStateCopy->deepCopy();
-            $placementManager->putDiePlacementOnBoard($placement, $gameStateCopyCopy->getBoard());
-            $newState = new NodeData($gameStateCopyCopy, $placement);
-            $node->addNodeToChildArray(new Node($newState));
+            $newGameState = $this->getGameSimulator()->simulateTurn($gameState, $placement);
+            $nodeData = new NodeData($newGameState, $placement);
+            $node->addNodeToChildArray(new Node($nodeData));
         }
     }
 

@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Sagrada\Dice;
+namespace Sagrada;
 
-use Sagrada\Board\Space\Restriction\ColorRestriction\ColorRestrictionInterface;
 use Sagrada\Dice\Color\DiceColorFactory;
 use Sagrada\Dice\Color\DiceColorInterface;
+use Sagrada\Dice\SagradaDie;
 use Sagrada\Dice\Value\DiceValueFactory;
 
 class DiceBag
@@ -87,10 +87,20 @@ class DiceBag
         return $die;
     }
 
+    public function drawDieCollection(int $numberOfDieToDraw): DieCollection
+    {
+        $collection = new DieCollection();
+        for ($i = 0; $i < $numberOfDieToDraw; $i++) {
+            $die = $this->drawDie();
+            $collection->add($die);
+        }
+        return $collection;
+    }
+
     /**
      * @param DiceColorInterface $diceColor
      */
-    public function removeOneDieOfColor(DiceColorInterface $diceColor)
+    public function removeOneDieOfColor(DiceColorInterface $diceColor): void
     {
         $colorSymbol = $diceColor->getSymbol();
         $this->colorCounter[$colorSymbol]--;

@@ -3,9 +3,8 @@ declare(strict_types=1);
 
 namespace Sagrada\Ai\Strategies;
 
-use Sagrada\Dice\SagradaDie;
 use Sagrada\DiePlacement;
-use Sagrada\Game\PlayerGameState;
+use Sagrada\Game;
 
 /**
  * Interface StrategyInterface
@@ -13,10 +12,6 @@ use Sagrada\Game\PlayerGameState;
  */
 interface StrategyInterface
 {
-    /**
-     * @param SagradaDie $die
-     * @param PlayerGameState $gameState
-     * @return DiePlacement
-     */
-    public function getBestDiePlacement(SagradaDie $die, PlayerGameState $gameState): ?DiePlacement;
+//    public function getBestDiePlacement(SagradaDie $die, Game\State $gameState): ?DiePlacement;
+    public function getBestDiePlacement(Game\State $gameState): ?DiePlacement;
 }

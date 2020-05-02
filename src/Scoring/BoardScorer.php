@@ -3,26 +3,17 @@ declare(strict_types=1);
 
 namespace Sagrada\Scoring;
 
-use Sagrada\Board\Board;
-use Sagrada\ScoreCards\SagradaScoreCardCollection;
 use Sagrada\Scoring\Scorers\ScorerInterface;
 
 class BoardScorer
 {
-//    protected $cardCollection;
-//
-//    public function __construct(SagradaScoreCardCollection $cardCollection)
-//    {
-//        $this->cardCollection = $cardCollection;
-//    }
-
     protected $scorers;
 
     public function __construct(array $scorers)
     {
         foreach ($scorers as $scorer) {
             if ($scorer instanceof ScorerInterface === false) {
-                throw new \Exception('Array object is not instance of ScorerInterface.');
+                throw new \Exception(sprintf('Expecting instance of ScorerInterface; got %s', get_class($scorer)));
             }
         }
 

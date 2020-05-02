@@ -3,24 +3,46 @@ declare(strict_types=1);
 
 namespace Sagrada\Player;
 
-use Sagrada\Board\Board;
+use Sagrada\Game\PlayerState;
 
 class SagradaPlayer
 {
-    /** @var Board */
-    protected $board;
+    /** @var string */
+    protected $name;
 
-    public function __construct(Board $board)
+    /** @var PlayerState */
+    protected $state;
+
+    /**
+     * @return PlayerState
+     */
+    public function getState(): PlayerState
     {
-        $this->board = $board;
+        return $this->state;
     }
 
     /**
-     * @return Board
+     * @param PlayerState $state
      */
-    public function getBoard(): Board
+    public function setState(PlayerState $state): void
     {
-        return $this->board;
+        $this->state = $state;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName(string $name): void
+    {
+        $this->name = $name;
     }
 }
 

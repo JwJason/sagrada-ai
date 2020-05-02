@@ -30,4 +30,9 @@ class Score
     {
         return $this->total;
     }
+
+    public function __toString()
+    {
+        return (string)$this->getTotal();
+    }
 }

@@ -6,6 +6,7 @@ namespace Sagrada\DiePlacement;
 use Sagrada\Board\Board;
 use Sagrada\Board\Grid\GridCoordinates;
 use Sagrada\Board\Iterators\RowIterator;
+use Sagrada\DieCollection;
 use Sagrada\DiePlacement;
 use Sagrada\Dice\SagradaDie;
 
@@ -53,6 +54,17 @@ class Finder
         }
 
         return $validPlacements;
+    }
+
+    public function getAllValidDiePlacementsForDieCollection(DieCollection $dieCollection, Board $board): array
+    {
+        $filteredCollection = $dieCollection->getWithFilteredOutDuplicates();
+        $validDiePlacements = [];
+
+        foreach ($filteredCollection as $die) {
+            $validDiePlacements[] = $this->getAllValidDiePlacementsForDie($die, $board);
+        }
+        return array_merge(...$validDiePlacements);
     }
 
 //    /**
