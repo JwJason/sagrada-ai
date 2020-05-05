@@ -24,7 +24,7 @@ class GameSimulator
 
         return $gameState;
     }
-    
+
     public function simulateTurn(Game\State $initialGameState, Turn $turn, bool $pullFromDieBag=false): Game\State
     {
         $gameState = $initialGameState->deepCopy();
@@ -48,8 +48,6 @@ class GameSimulator
         } else {
             throw new \LogicException(sprintf('Unknown Turn type: %s', get_class($turn)));
         }
-
-//        echo $gameState;
 
         $gameState->nextTurn();
         return $gameState;
