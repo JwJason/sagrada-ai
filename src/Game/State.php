@@ -159,7 +159,7 @@ class State
 
     public function currentRoundHasTurnsRemaining(): bool
     {
-        return count($this->remainingTurns) > 0;
+        return count($this->remainingTurns) > 1;
     }
 
     public function deepCopy(): self
