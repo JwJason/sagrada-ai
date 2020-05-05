@@ -38,11 +38,11 @@ class MonteCarloTreeStrategy implements StrategyInterface
     {
         $totalSimulations = 0;
         $tree = $this->createTreeFromGameState($gameState);
-        $endTime = time() + 30;
+        $endTime = time() + 20;
         $rootNode = $tree->getRootNode();
         $myPlayerIndex = $gameState->getGame()->getPlayerIndex($gameState->getCurrentPlayer());
         $myCurrentRound = $gameState->getCurrentRound();
-        
+
         while (time() < $endTime) {
             $node = $this->selectPromisingNode($rootNode);
             $nodeToExplore = $node;
@@ -156,7 +156,7 @@ class MonteCarloTreeStrategy implements StrategyInterface
     protected function expandNode(Node $node, int $myCurrentRound): void
     {
         // Limit construction of GameStateNodes to simulating the current round only.
-        // GameStateNodes are only useful in the current round, when we know the state of the draft pool
+        // GameStateNodes are only useful in the current round, when we know the state of the draft pool.
         if ($node instanceof Tree\GameStateNode) {
             if ($node->getGameState()->getCurrentRound() === $myCurrentRound) {
                 $this->getHelper()->expandGameStateNode($node);

@@ -22,8 +22,12 @@ class Helper
     public function expandGameStateNode(Tree\GameStateNode $node): void
     {
         $gameState = $node->getGameState();
-        $game = $gameState->getGame();
 
+        if ($gameState->gameIsCompleted() === true) {
+            return;
+        }
+
+        $game = $gameState->getGame();
         $placementFinder = $game->getPlacementFinder();
 
         $placements = $placementFinder->getAllValidDiePlacementsForDieCollection(
@@ -31,34 +35,36 @@ class Helper
             $gameState->getCurrentPlayer()->getState()->getBoard()
         );
 
-//        echo sprintf(
-//            "Expanding game state node (round %d, turn %d, %d children)\n",
-//            $gameState->getCurrentRound(),
-//            $gameState->getCurrentTurn(),
-//            count($placements)
-//        );
-
-        if (count($placements) > 0) {
-            /** @var DiePlacement $placement */
-            foreach ($placements as $placement) {
-//                echo sprintf("--- %s\n", $placement);
-                $turn = new Turn\DiePlacement($placement);
-                $newGameState = $this->getGameSimulator()->simulateTurn($gameState, $turn);
-                $newGameStateNode = new Tree\GameStateNode;
+        try {
+            if (count($placements) > 0) {
+                /** @var DiePlacement $placement */
+                foreach ($placements as $placement) {
+                    $turn = new Turn\DiePlacement($placement);
+                    $newGameState = $this->getGameSimulator()->simulateTurn($gameState, $turn);
+                    $newGameStateNode = new Tree\GameStateNode;
+                    $newGameStateNode->setGameState($newGameState);
+                    $node->addChild($newGameStateNode);
+                }
+            } else {
+                $newGameState = $this->getGameSimulator()->simulateTurn($gameState, new Turn\Pass());
+                $newGameStateNode = new Tree\GameStateNode();
                 $newGameStateNode->setGameState($newGameState);
                 $node->addChild($newGameStateNode);
             }
-        } else {
-            $newGameState = $this->getGameSimulator()->simulateTurn($gameState, new Turn\Pass());
-            $newGameStateNode = new Tree\GameStateNode();
-            $newGameStateNode->setGameState($newGameState);
-            $node->addChild($newGameStateNode);
+        } catch (\Throwable $t) {
+            echo sprintf("expandGameNode() failed: %s\n", $t);
+            echo sprintf("Game State:\n%s\n", $node->getGameState());
+            die();
         }
     }
 
     public function expandDiePlacementNode(Node $node): void
     {
-       $gameState = $this->getGameStateFromNode($node);
+        $gameState = $this->getGameStateFromNode($node);
+
+        if ($gameState->gameIsCompleted() === true) {
+            return;
+        }
 
         $possibleDiceRolls = $gameState->getDiceBag()->getAllPossibleRemainingDiceRolls();
         $placementFinder = $gameState->getGame()->getPlacementFinder();
@@ -81,9 +87,17 @@ class Helper
         $gameState = $node->getLastKnownGameState();
         $turnsSinceGameState = $node->getAllPrecedingTurns();
 
-        /** @var Turn $turn */
-        foreach ($turnsSinceGameState as $turn) {
-            $gameState = $this->getGameSimulator()->simulateTurn($gameState, $turn, true);
+        try {
+            /** @var Turn $turn */
+            foreach ($turnsSinceGameState as $turn) {
+                $gameState = $this->getGameSimulator()->simulateTurn($gameState, $turn, true);
+            }
+        } catch (\Throwable $t) {
+            echo sprintf("reconstructGameStateFromTurnNode failed: %s\n", $t);
+            echo sprintf("Last game state prior to reconstruction:\n%s\n\n", $node->getLastKnownGameState());
+            echo sprintf("Last reconstructed game state:\n%s\n\n", $gameState);
+            echo sprintf("Turns used for reconstruction:\n%s\n", implode(' -> ' . PHP_EOL, $turnsSinceGameState));
+            die();
         }
 
         return $gameState;

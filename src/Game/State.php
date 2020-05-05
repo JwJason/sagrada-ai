@@ -11,6 +11,9 @@ use Sagrada\Player\SagradaPlayer;
 
 class State
 {
+    /** @var bool */
+    protected $gameIsCompleted;
+
     /** @var int */
     protected $currentRound;
 
@@ -49,6 +52,7 @@ class State
         }
         $this->setCurrentRound(1);
         $this->initializeRound();
+        $this->gameIsCompleted = false;
     }
 
     protected function initializeRound(): void
@@ -69,8 +73,12 @@ class State
         $this->currentTurn++;
 
         if (count($this->remainingTurns) === 0) {
-            $this->setCurrentRound($this->getCurrentRound() + 1);
-            $this->initializeRound();
+            if ($this->hasRoundsRemaining() === true) {
+                $this->setCurrentRound($this->getCurrentRound() + 1);
+                $this->initializeRound();
+            } else {
+                $this->gameIsCompleted = true;
+            }
         }
     }
 
@@ -159,7 +167,7 @@ class State
 
     public function currentRoundHasTurnsRemaining(): bool
     {
-        return count($this->remainingTurns) > 1;
+        return count($this->remainingTurns) > 0;
     }
 
     public function deepCopy(): self
@@ -188,5 +196,13 @@ class State
             $this->getDraftPool(),
             $this->getCurrentPlayer()->getState()->getBoard()
         );
+    }
+
+    /**
+     * @return bool
+     */
+    public function gameIsCompleted(): bool
+    {
+        return $this->gameIsCompleted;
     }
 }

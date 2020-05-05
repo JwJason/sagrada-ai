@@ -65,12 +65,13 @@ try {
     // Example turns
     $gameState = $game->getState();
     $gameState->initializeFirstRound();
-    while ($gameState->hasRoundsRemaining() || $gameState->currentRoundHasTurnsRemaining()) {
+    while ($gameState->gameIsCompleted() === false) {
         echo (string)$gameState;
         $turn = $aiStrategy->getBestTurn($gameState);
+        echo sprintf("Playing %s\n", $turn);
         $gameState = $gameSimulator->simulateTurn($gameState, $turn);
     }
-    echo "Score: " . $game->getPlayers()[0]->getState()->getScore() . "\n";
+    echo "Score: " . $gameState->getGame()->getPlayers()[0]->getState()->getScore() . "\n";
 } catch (\Throwable $t) {
     throw $t;
 }

@@ -18,7 +18,7 @@ class GameSimulator
     {
         $gameState = $initialGameState->deepCopy();
 
-        while ($gameState->hasRoundsRemaining() || $gameState->currentRoundHasTurnsRemaining()) {
+        while ($gameState->gameIsCompleted() === false) {
             $gameState = $this->simulateRandomTurn($gameState);
         }
 
