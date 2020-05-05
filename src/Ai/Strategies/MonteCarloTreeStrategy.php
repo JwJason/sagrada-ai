@@ -19,7 +19,7 @@ class MonteCarloTreeStrategy implements StrategyInterface
     // (in which we have a known draft pool that we're playing against). After that, we add TurnNodes instead.
     public const MAX_GAME_STATE_NODE_DEPTH = 2;
     public const MAX_TREE_DEPTH = 5;
-    public const MINIMUM_VISITS_PER_NODE = 10;
+    public const MINIMUM_VISITS_PER_NODE = 25;
 
     /** @var GameSimulator */
     protected $gameSimulator;

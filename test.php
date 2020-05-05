@@ -70,9 +70,7 @@ try {
         $turn = $aiStrategy->getBestTurn($gameState);
         $gameState = $gameSimulator->simulateTurn($gameState, $turn);
     }
-
-//    echo "Number of occurances: " . $scorer->getNumberOfOccurances() . "\n";
-//    echo "Player 1 Score: " . $gameState->getPlayerState()->getScore() . "\n";
+    echo "Score: " . $game->getPlayers()[0]->getScore() . "\n";
 } catch (\Throwable $t) {
     throw $t;
 }
