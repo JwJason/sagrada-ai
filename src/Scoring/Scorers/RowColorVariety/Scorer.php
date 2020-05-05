@@ -12,8 +12,11 @@ class Scorer implements ScorerInterface
 {
     protected const PER_DIEM_SCORE = 6;
 
+    /** @var Board */
     protected $board;
-    protected $occurances;
+    /** @var int */
+    protected $occurrences;
+    /** @var int */
     protected $score;
 
     public function __construct(Board $board)
@@ -27,14 +30,14 @@ class Scorer implements ScorerInterface
         return $this->score;
     }
 
-    public function getNumberOfOccurances(): int
+    public function getNumberOfOccurrences(): int
     {
-        return $this->occurances;
+        return $this->occurrences;
     }
 
     protected function score(Board $board): void
     {
-        $occurances = 0;
+        $occurrences = 0;
         $score = 0;
 
         $calculator = new ColorVarietyHelper();
@@ -42,12 +45,12 @@ class Scorer implements ScorerInterface
 
         foreach ($iterator as $row) {
             if ($row->allSpacesHaveDice() && $calculator->hasColorVariety($row)) {
-                $occurances++;
+                $occurrences++;
                 $score += self::PER_DIEM_SCORE;
             }
         }
 
-        $this->occurances = $occurances;
+        $this->occurrences = $occurrences;
         $this->score = $score;
     }
 }

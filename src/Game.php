@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Sagrada;
 
 use Sagrada\Game\State;
+use Sagrada\Player\SagradaPlayer;
 use Sagrada\ScoreCards\SagradaScoreCardCollection;
 
 class Game
@@ -88,6 +89,16 @@ class Game
     public function setPlacementValidator(DiePlacement\Validator $placementValidator): void
     {
         $this->placementValidator = $placementValidator;
+    }
+
+    public function getPlayerIndex(SagradaPlayer $player): int
+    {
+        foreach ($this->players as $index => $comparisonPlayer) {
+            if ($player === $comparisonPlayer) {
+                return $index;
+            }
+        }
+        throw new \RuntimeException('Player not found in game players collection');
     }
 
     /**

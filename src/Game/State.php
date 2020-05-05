@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Sagrada\Game;
 
 use function DeepCopy\deep_copy;
-use mysql_xdevapi\Exception;
 use Sagrada\DiceBag;
 use Sagrada\DieCollection;
 use Sagrada\Game;
@@ -12,8 +11,14 @@ use Sagrada\Player\SagradaPlayer;
 
 class State
 {
+    /** @var bool */
+    protected $gameIsCompleted;
+
     /** @var int */
     protected $currentRound;
+
+    /** @var int */
+    protected $currentTurn;
 
     /** @var DiceBag */
     protected $diceBag;
@@ -32,10 +37,10 @@ class State
         return $this->currentRound;
     }
 
-    protected function setCurrentRound(int $currentRound): void
+    public function setCurrentRound(int $currentRound): void
     {
         if ($currentRound > Game::TOTAL_NUMBER_OF_ROUNDS) {
-            throw new \Exception(sprintf('Max of %s rounds per game exceeded', Game::TOTAL_NUMBER_OF_ROUNDS));
+            throw new \LogicException(sprintf('Max of %s rounds per game exceeded', Game::TOTAL_NUMBER_OF_ROUNDS));
         }
         $this->currentRound = $currentRound;
     }
@@ -47,6 +52,7 @@ class State
         }
         $this->setCurrentRound(1);
         $this->initializeRound();
+        $this->gameIsCompleted = false;
     }
 
     protected function initializeRound(): void
@@ -57,15 +63,22 @@ class State
 
         $this->instantiateTurns();
         $this->refreshDraftPoolFromDiceBag();
+        $this->currentTurn = 1;
     }
 
     public function nextTurn(): void
     {
         array_shift($this->remainingTurns);
 
+        $this->currentTurn++;
+
         if (count($this->remainingTurns) === 0) {
-            $this->setCurrentRound($this->getCurrentRound() + 1);
-            $this->initializeRound();
+            if ($this->hasRoundsRemaining() === true) {
+                $this->setCurrentRound($this->getCurrentRound() + 1);
+                $this->initializeRound();
+            } else {
+                $this->gameIsCompleted = true;
+            }
         }
     }
 
@@ -144,8 +157,67 @@ class State
         return $this->remainingTurns[0];
     }
 
+    /**
+     * @return int
+     */
+    public function getCurrentTurn(): int
+    {
+        return $this->currentTurn;
+    }
+
+    public function currentRoundHasTurnsRemaining(): bool
+    {
+        return count($this->remainingTurns) > 0;
+    }
+
     public function deepCopy(): self
     {
         return deep_copy($this);
+    }
+
+    public function __toString()
+    {
+        $draftPoolString = '';
+        $playerString = '';
+
+        if ($this->gameIsCompleted() === true) {
+            /** @var SagradaPlayer $player */
+            foreach ($this->getGame()->getPlayers() as $player) {
+                $playerString .= $player;
+            }
+            $gameStatusString = 'GAME COMPLETED';
+        } else {
+            $draftPoolString = sprintf(
+                "Draft Pool\n" .
+                "-----------\n" .
+                "%s\n" .
+                "-----------\n",
+                (string)$this->getDraftPool()
+            );
+            $gameStatusString = sprintf(
+                "> Round #%d\n" .
+                "> Turn %d / %d\n" .
+                "-----------\n",
+                $this->getCurrentRound(),
+                $this->getCurrentTurn(),
+                count($this->getGame()->getPlayers()) * Game::TURNS_PER_PLAYER_PER_ROUND,
+            );
+            $playerString = (string)$this->getCurrentPlayer();
+        }
+
+        return sprintf(
+            "%s%s%s\n",
+            $gameStatusString,
+            $draftPoolString,
+            $playerString
+        );
+    }
+
+    /**
+     * @return bool
+     */
+    public function gameIsCompleted(): bool
+    {
+        return $this->gameIsCompleted;
     }
 }

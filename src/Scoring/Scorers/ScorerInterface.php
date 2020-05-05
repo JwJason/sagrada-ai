@@ -9,5 +9,5 @@ interface ScorerInterface
 {
     public function __construct(Board $board);
     public function getScore(): int;
-    public function getNumberOfOccurances(): int;
+    public function getNumberOfOccurrences(): int;
 }

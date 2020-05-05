@@ -7,6 +7,7 @@ use Sagrada\Board\Space\BoardSpaceCollection;
 
 class RowIterator extends AbstractBoardIterator
 {
+    /** @var int */
     protected $row = 0;
 
     public function rewind(): void
