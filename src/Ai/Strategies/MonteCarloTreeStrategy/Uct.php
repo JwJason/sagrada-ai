@@ -1,25 +1,24 @@
 <?php
 declare(strict_types=1);
 
-namespace Sagrada\Ai\Strategies\MonteCarloTree;
+namespace Sagrada\Ai\Strategies\MonteCarloTreeStrategy;
 
-use Sagrada\Ai\Strategies\MonteCarloTree\Tree\Node;
+use Sagrada\Ai\Strategies\MonteCarloTreeStrategy;
+use Sagrada\Ai\Strategies\MonteCarloTreeStrategy\Tree\Node;
 
 class Uct
 {
-    protected const MINIMUM_VISITS_PER_NODE = 50;
-
     public function findBestNodeWithUct(Node $startingNode): ?Node
     {
-        $parentVisitCount = $startingNode->getData()->getVisitCount();
+        $parentVisitCount = $startingNode->getVisitCount();
         $max = 0;
         $bestNode = null;
 
-        foreach ($startingNode->getChildArray() as $node) {
+        foreach ($startingNode->getChildren() as $node) {
             $uctValue = $this->getUctValue(
                 $parentVisitCount,
-                $node->getData()->getVisitCount(),
-                $node->getData()->getAggregateScore()
+                $node->getVisitCount(),
+                $node->getAggregateScore()
             );
             if ($uctValue > $max) {
                 $max = $uctValue;
@@ -32,10 +31,10 @@ class Uct
 
     public function getUctValue(int $parentVisitCount, int $nodeVisitCount, float $totalScore): float
     {
-        if ($nodeVisitCount < self::MINIMUM_VISITS_PER_NODE) {
+        if ($nodeVisitCount < MonteCarloTreeStrategy::MINIMUM_VISITS_PER_NODE) {
             return PHP_INT_MAX;
         }
-        return ((float)$totalScore / (double)$nodeVisitCount)
+        return ($totalScore / (double)$nodeVisitCount)
             + 1.41 * sqrt(log($parentVisitCount) / (float)$nodeVisitCount);
     }
 }

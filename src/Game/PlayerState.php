@@ -7,6 +7,7 @@ use Sagrada\Board\Board;
 use Sagrada\Game;
 use Sagrada\Player\SagradaPlayer;
 use Sagrada\Scoring\Scorers\FromSagradaScoreCardFactory;
+use Sagrada\Turn;
 
 /**
  * Class PlayerState
@@ -23,6 +24,9 @@ class PlayerState
     /** @var SagradaPlayer */
     protected $player;
 
+    /** @var Turn\Collection */
+    protected $turnHistory;
+
     public function __construct(
         SagradaPlayer $player,
         Board $board,
@@ -31,6 +35,7 @@ class PlayerState
         $this->board = $board;
         $this->player = $player;
         $this->game = $game;
+        $this->turnHistory = new Turn\Collection();
     }
 
     public function hasAnyPossibleMovesRemaining(): bool
@@ -60,5 +65,10 @@ class PlayerState
         $scorerFactory = new FromSagradaScoreCardFactory();
         $boardScorer = $scorerFactory->createFromScoreCardCollection($this->getGame()->getScoreCards(), $this->getBoard());
         return new Score($boardScorer->getScore());
+    }
+
+    public function getTurnHistory(): Turn\Collection
+    {
+        return $this->turnHistory;
     }
 }

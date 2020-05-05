@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Sagrada\Game;
 
 use function DeepCopy\deep_copy;
-use mysql_xdevapi\Exception;
 use Sagrada\DiceBag;
 use Sagrada\DieCollection;
 use Sagrada\Game;
@@ -14,6 +13,9 @@ class State
 {
     /** @var int */
     protected $currentRound;
+
+    /** @var int */
+    protected $currentTurn;
 
     /** @var DiceBag */
     protected $diceBag;
@@ -32,10 +34,10 @@ class State
         return $this->currentRound;
     }
 
-    protected function setCurrentRound(int $currentRound): void
+    public function setCurrentRound(int $currentRound): void
     {
         if ($currentRound > Game::TOTAL_NUMBER_OF_ROUNDS) {
-            throw new \Exception(sprintf('Max of %s rounds per game exceeded', Game::TOTAL_NUMBER_OF_ROUNDS));
+            throw new \LogicException(sprintf('Max of %s rounds per game exceeded', Game::TOTAL_NUMBER_OF_ROUNDS));
         }
         $this->currentRound = $currentRound;
     }
@@ -57,11 +59,14 @@ class State
 
         $this->instantiateTurns();
         $this->refreshDraftPoolFromDiceBag();
+        $this->currentTurn = 1;
     }
 
     public function nextTurn(): void
     {
         array_shift($this->remainingTurns);
+
+        $this->currentTurn++;
 
         if (count($this->remainingTurns) === 0) {
             $this->setCurrentRound($this->getCurrentRound() + 1);
@@ -144,8 +149,44 @@ class State
         return $this->remainingTurns[0];
     }
 
+    /**
+     * @return int
+     */
+    public function getCurrentTurn(): int
+    {
+        return $this->currentTurn;
+    }
+
+    public function currentRoundHasTurnsRemaining(): bool
+    {
+        return count($this->remainingTurns) > 0;
+    }
+
     public function deepCopy(): self
     {
         return deep_copy($this);
+    }
+
+    public function __toString()
+    {
+        return sprintf(
+            "> Round #%d\n" .
+            "> Turn %d / %d\n" .
+            "> Player: %s\n" .
+            "-----------\n" .
+            "Draft Pool\n" .
+            "-----------\n" .
+            "%s\n" .
+            "-----------\n" .
+            "Board\n" .
+            "-----------\n" .
+            "%s\n",
+            $this->getCurrentRound(),
+            $this->getCurrentTurn(),
+            count($this->getGame()->getPlayers()) * Game::TURNS_PER_PLAYER_PER_ROUND,
+            $this->getCurrentPlayer()->getName(),
+            $this->getDraftPool(),
+            $this->getCurrentPlayer()->getState()->getBoard()
+        );
     }
 }

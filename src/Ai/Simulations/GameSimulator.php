@@ -4,8 +4,9 @@ declare(strict_types=1);
 namespace Sagrada\Ai\Simulations;
 
 use Sagrada\DiePlacement;
-use Sagrada\Game\GameResults;
 use Sagrada\Game;
+use Sagrada\Turn;
+use Sagrada\Turn\Pass;
 
 /**
  * Class GameSimulator
@@ -13,7 +14,7 @@ use Sagrada\Game;
  */
 class GameSimulator
 {
-    public function simulateRandomPlayout(Game\State $initialGameState): GameResults
+    public function simulateRandomPlayout(Game\State $initialGameState): Game\State
     {
         $gameState = $initialGameState->deepCopy();
 
@@ -21,23 +22,36 @@ class GameSimulator
             $gameState = $this->simulateRandomTurn($gameState);
         }
 
-        // TODO- Remove hard-coded assumption that AI player is player 1
-        return new GameResults(
-            $gameState->getGame()->getPlayers()[0]->getState()->getBoard(),
-            $gameState->getGame()->getPlayers()[0]->getState()->getScore()
-        );
+        return $gameState;
     }
 
-    public function simulateTurn(Game\State $initialGameState, DiePlacement $diePlacement): Game\State
+    public function simulateTurn(Game\State $initialGameState, Turn $turn, bool $pullFromDieBag=false): Game\State
     {
         $gameState = $initialGameState->deepCopy();
         $player = $gameState->getCurrentPlayer();
-        $board = $player->getState()->getBoard();
 
-        $gameState->getDraftPool()->remove($diePlacement->getDie());
-        $gameState->getGame()->getPlacementPlacer()->putDiePlacementOnBoard($diePlacement, $board);
+        if ($turn instanceof Turn\DiePlacement) {
+            $placementPlacer = $gameState->getGame()->getPlacementPlacer();
+            $board = $player->getState()->getBoard();
+            $diePlacement = $turn->getDiePlacement();
+
+            if ($pullFromDieBag === true) {
+                $gameState->getDiceBag()->removeOneDieOfColor($diePlacement->getDie()->getColor());
+            } else {
+                $gameState->getDraftPool()->remove($diePlacement->getDie());
+            }
+
+            $placementPlacer->putDiePlacementOnBoard($diePlacement, $board);
+            $player->getState()->getTurnHistory()->add($turn);
+        } else if ($turn instanceof Turn\Pass) {
+            $player->getState()->getTurnHistory()->add(new Pass());
+        } else {
+            throw new \LogicException(sprintf('Unknown Turn type: %s', get_class($turn)));
+        }
+
+//        echo $gameState;
+
         $gameState->nextTurn();
-
         return $gameState;
     }
 
@@ -51,14 +65,19 @@ class GameSimulator
         $draftPool = $gameState->getDraftPool();
         $diePlacements = $placementFinder->getAllValidDiePlacementsForDieCollection($draftPool, $board);
 
-        if (!empty($diePlacements)) {
-            /** @var DiePlacement $diePlacement */
-            $diePlacement = $diePlacements[array_rand($diePlacements)];
-            $gameState->getDraftPool()->remove($diePlacement->getDie());
-            $placementPlacer->putDiePlacementOnBoard($diePlacement, $board);
+        if (empty($diePlacements)) {
+            $gameState->getCurrentPlayer()->getState()->getTurnHistory()->add(new Pass());
+            $gameState->nextTurn();
+            return $gameState;
         }
 
+        /** @var DiePlacement $diePlacement */
+        $diePlacement = $diePlacements[array_rand($diePlacements)];
+        $gameState->getDraftPool()->remove($diePlacement->getDie());
+        $placementPlacer->putDiePlacementOnBoard($diePlacement, $board);
+        $gameState->getCurrentPlayer()->getState()->getTurnHistory()->add(new Turn\DiePlacement($diePlacement));
         $gameState->nextTurn();
+
         return $gameState;
     }
 }

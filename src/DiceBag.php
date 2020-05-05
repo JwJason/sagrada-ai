@@ -107,24 +107,24 @@ class DiceBag
     }
 
     /**
-     * @return SagradaDie[]
+     * @return DieCollection
      * @throws \Exception
      */
-    public function getAllPossibleRemainingDiceRolls(): array
+    public function getAllPossibleRemainingDiceRolls(): DieCollection
     {
         $colorCounter = $this->getColorCounterForRemainingColors();
-        $dice = [];
+        $dieCollection = new DieCollection();
 
-        foreach ($colorCounter as $count => $colorSymbol) {
+        foreach ($colorCounter as $colorSymbol => $count) {
             for ($value = 1; $value <= 6; $value++) {
-                $dice[] = new SagradaDie(
+                $dieCollection->add(new SagradaDie(
                     $this->colorFactory->createDiceColorFromSymbol($colorSymbol),
-                    $this->valueFactory->createDiceValueFromSymbol(strval($value))
-                );
+                    $this->valueFactory->createDiceValueFromSymbol((string)$value)
+                ));
             }
         }
 
-        return $dice;
+        return $dieCollection;
     }
 
     /**

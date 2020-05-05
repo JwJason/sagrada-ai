@@ -9,7 +9,9 @@ use Sagrada\RestrictionModifiers\SagradaRestrictionModifierInterface;
 
 class DiePlacement
 {
+    /** @var GridCoordinates */
     protected $coordinates;
+    /** @var SagradaDie */
     protected $die;
 
     /**

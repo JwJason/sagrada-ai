@@ -3,31 +3,28 @@ declare(strict_types=1);
 
 namespace Sagrada\Ai;
 
+use Sagrada\Ai\Simulations\GameSimulator;
 use Sagrada\Ai\Strategies\StrategyInterface;
-use Sagrada\Dice\SagradaDie;
-use Sagrada\DieCollection;
 use Sagrada\Game;
 
 class AiPlayer
 {
     /** @var StrategyInterface */
     protected $evaluationStrategy;
-    /** @var Game */
-    protected $game;
+    /** @var GameSimulator */
+    protected $gameSimulator;
 
-    public function __construct(StrategyInterface $evaluationStrategy, Game $game)
+    public function __construct(StrategyInterface $evaluationStrategy, GameSimulator $gameSimulator)
     {
         $this->evaluationStrategy = $evaluationStrategy;
-        $this->game = $game;
+        $this->gameSimulator = $gameSimulator;
     }
 
     public function takeTurn(Game\State $gameState): void
     {
         echo "AI Evaluating...\n";
-        $bestDiePlacement = $this->getEvaluationStrategy()->getBestDiePlacement($gameState);
-        if ($bestDiePlacement) {
-            $this->getGame()->getPlacementPlacer()->putDiePlacementOnBoard($bestDiePlacement, $gameState->getPlayerState()->getBoard());
-        }
+        $turn = $this->getEvaluationStrategy()->getBestTurn($gameState);
+        $this->getGameSimulator()->simulateTurn($gameState, $turn);
     }
 
     /**
@@ -39,10 +36,10 @@ class AiPlayer
     }
 
     /**
-     * @return Game
+     * @return GameSimulator
      */
-    public function getGame(): Game
+    public function getGameSimulator(): GameSimulator
     {
-        return $this->game;
+        return $this->gameSimulator;
     }
 }

@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Sagrada\Ai\Strategies\MonteCarloTree\Tree;
+namespace Sagrada\Ai\Strategies\MonteCarloTreeStrategy;
+
+use Sagrada\Ai\Strategies\MonteCarloTreeStrategy\Tree\Node;
 
 class Tree
 {
