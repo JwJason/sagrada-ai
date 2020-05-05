@@ -14,7 +14,10 @@ class Uct
         $max = 0;
         $bestNode = null;
 
-        foreach ($startingNode->getChildren() as $node) {
+        $children = $startingNode->getChildren();
+        shuffle($children);
+
+        foreach ($children as $node) {
             $uctValue = $this->getUctValue(
                 $parentVisitCount,
                 $node->getVisitCount(),

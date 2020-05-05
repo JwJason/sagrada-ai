@@ -24,7 +24,7 @@ class GameSimulator
 
         return $gameState;
     }
-
+    
     public function simulateTurn(Game\State $initialGameState, Turn $turn, bool $pullFromDieBag=false): Game\State
     {
         $gameState = $initialGameState->deepCopy();
@@ -60,6 +60,7 @@ class GameSimulator
 
     }
 
+    // TODO - Add 'Pass' turn option to this, as well as to the node expansion
     public function simulateRandomTurn(Game\State $initialGameState): Game\State
     {
         $gameState = $initialGameState->deepCopy();

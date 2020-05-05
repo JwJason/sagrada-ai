@@ -15,8 +15,8 @@ use Sagrada\Turn;
 
 class MonteCarloTreeStrategy implements StrategyInterface
 {
-    public const MAX_TREE_DEPTH = 10;
-    public const MINIMUM_VISITS_PER_NODE = 70;
+    public const MAX_TREE_DEPTH = 20;
+    public const MINIMUM_VISITS_PER_NODE = 50;
 
     /** @var GameSimulator */
     protected $gameSimulator;
@@ -36,13 +36,13 @@ class MonteCarloTreeStrategy implements StrategyInterface
 
     public function getBestTurn(Game\State $gameState): Turn
     {
-        $totalSimluations = 0;
+        $totalSimulations = 0;
         $tree = $this->createTreeFromGameState($gameState);
-        $endTime = time() + 60;
+        $endTime = time() + 30;
         $rootNode = $tree->getRootNode();
         $myPlayerIndex = $gameState->getGame()->getPlayerIndex($gameState->getCurrentPlayer());
         $myCurrentRound = $gameState->getCurrentRound();
-        // DEBUG
+        
         while (time() < $endTime) {
             $node = $this->selectPromisingNode($rootNode);
             $nodeToExplore = $node;
@@ -68,10 +68,10 @@ class MonteCarloTreeStrategy implements StrategyInterface
             $myPlayer = $simulatedGameState->getGame()->getPlayers()[$myPlayerIndex];
             $this->backPropagateNodeData($nodeToExplore, $myPlayer->getState()->getScore());
 
-            $totalSimluations++;
+            $totalSimulations++;
         }
 
-        echo sprintf("TOTAL SIMULATIONS: %d\n", $totalSimluations);
+        echo sprintf("TOTAL SIMULATIONS: %d\n", $totalSimulations);
         $this->debugChildNodes($rootNode);
 
         $bestNode = $this->getChildWithMaxScore($rootNode);
@@ -85,42 +85,6 @@ class MonteCarloTreeStrategy implements StrategyInterface
         $myPlayer = $bestNodeGameState->getGame()->getPlayers()[$myPlayerIndex];
         return $myPlayer->getState()->getTurnHistory()->last();
     }
-
-//    public function getBestDiePlacement(SagradaDie $die, Game\State $gameState): ?DiePlacement
-//    {
-//        $tree = $this->createTreeFromGameState($gameState);
-//        $endTime = time() + 12;
-//        $rootNode = $tree->getRootNode();
-//
-//        // DEBUG
-//        for ($i = 0; $i < 20000; $i++) {
-////        while (time() < $endTime) {
-//            $node = $this->selectPromisingNode($rootNode);
-//            $nodeToExplore = $node;
-//
-//            if (empty($node->getChildArray())) {
-//                $this->expandNode($node, $die);
-//            }
-//
-//            $childNodes = $node->getChildArray();
-//
-//            if (!empty($childNodes)) {
-//                $nodeToExplore = $childNodes[array_rand($childNodes)];
-//            }
-//
-//            $gameResult = $this->gameSimulator->simulateRandomPlayout($nodeToExplore->getData()->getGameState());
-//            $this->backPropagateNodeData($nodeToExplore, $gameResult->getScore());
-//        }
-//
-//        $this->debugChildNodes($rootNode);
-//
-//        $bestNode = $this->getChildWithMaxScore($rootNode);
-//
-//        if (!$bestNode) {
-//            return null;
-//        }
-//        return $bestNode->getData()->getLastDiePlacement();
-//    }
 
     public function debugChildNodes(Node $startingNode): void
     {
@@ -197,11 +161,9 @@ class MonteCarloTreeStrategy implements StrategyInterface
             if ($node->getGameState()->getCurrentRound() === $myCurrentRound) {
                 $this->getHelper()->expandGameStateNode($node);
             } else {
-//                echo sprintf("Expanding die placement node, depth: %d\n", $node->getDepth());
                 $this->getHelper()->expandDiePlacementNode($node);
             }
         } else if ($node instanceof Tree\TurnNode) {
-//            echo sprintf("Expanding die placement node, depth: %d\n", $node->getDepth());
             $this->getHelper()->expandDiePlacementNode($node);
         } else {
             throw new \LogicException(sprintf('Unhandled node instance type: %s', get_class($node)));
@@ -226,55 +188,18 @@ class MonteCarloTreeStrategy implements StrategyInterface
             $childAverageSum += ($childNode->getAggregateScore() / $childNode->getVisitCount());
         }
 
-
-        echo ">>>>>> PRUNING NODE\n";
-
         $childAverageMean = $childAverageSum / $numberOfChildren;
 
         /** @var Node $childNode */
         foreach ($children as $key => $childNode) {
              $childMean = $childNode->getAggregateScore() / $childNode->getVisitCount();
-             echo sprintf(
-                 "children=%d; avg score=%f; mean=%f;\n",
-                $numberOfChildren,
-                $childMean,
-                $childAverageMean,
-             );
              if ($childMean < $childAverageMean) {
                  unset($children[$key]);
-                 echo "Pruned 1 child\n";
              }
         }
 
         $node->setChildren($children);
         $node->setHasBeenPruned(true);
-
-//        $variance = 0;
-//
-//        /** @var Node $childNode */
-//        foreach ($children as $childNode) {
-//            $variance += (($childNode->getAggregateScore() / $childNode->getVisitCount()) - $childAverageMean)**2;
-//        }
-//        $standardDeviation = $variance / $numberOfChildren;
-//
-//        /** @var Node $childNode */
-//        foreach ($children as $key => $childNode) {
-//             $childMean = $childNode->getAggregateScore() / $childNode->getVisitCount();
-//             echo sprintf(
-//                 "children=%d; avg score=%f; mean=%f; standard deviation=%f\n",
-//                $numberOfChildren,
-//                $childMean,
-//                $childAverageMean,
-//                $standardDeviation
-//             );
-//             if ($childMean < $childAverageMean - (0.5*$standardDeviation)) {
-//                 unset($children[$key]);
-//                 echo "Pruned 1 child\n";
-//             }
-//        }
-//
-//        $node->setChildren($children);
-//        $node->setHasBeenPruned(true);
     }
 
     /**
