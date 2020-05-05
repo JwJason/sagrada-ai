@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Sagrada\Ai\Strategies;
 
-use Sagrada\Ai\Simulations\GameSimulator;
+use Sagrada\Ai\GameSimulator;
 use Sagrada\Ai\Strategies\MonteCarloTreeStrategy\Helper;
 use Sagrada\Ai\Strategies\MonteCarloTreeStrategy\Tree;
 use Sagrada\Ai\Strategies\MonteCarloTreeStrategy\Tree\Node;
@@ -16,6 +16,7 @@ use Sagrada\Turn;
 class MonteCarloTreeStrategy implements StrategyInterface
 {
     public const MAX_TREE_DEPTH = 20;
+    public const MAX_TREE_VISIT_TIME = 20;
     public const MINIMUM_VISITS_PER_NODE = 50;
 
     /** @var GameSimulator */
@@ -38,7 +39,7 @@ class MonteCarloTreeStrategy implements StrategyInterface
     {
         $totalSimulations = 0;
         $tree = $this->createTreeFromGameState($gameState);
-        $endTime = time() + 20;
+        $endTime = time() + self::MAX_TREE_VISIT_TIME;
         $rootNode = $tree->getRootNode();
         $myPlayerIndex = $gameState->getGame()->getPlayerIndex($gameState->getCurrentPlayer());
         $myCurrentRound = $gameState->getCurrentRound();

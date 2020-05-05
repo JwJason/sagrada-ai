@@ -44,5 +44,14 @@ class SagradaPlayer
     {
         $this->name = $name;
     }
+
+    public function __toString()
+    {
+        return sprintf(
+            "Player: %s\n%s",
+            $this->getName(),
+            (string)$this->getState()
+        );
+    }
 }
 

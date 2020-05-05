@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Sagrada\Ai\Strategies\MonteCarloTreeStrategy;
 
-use Sagrada\Ai\Simulations\GameSimulator;
+use Sagrada\Ai\GameSimulator;
 use Sagrada\Ai\Strategies\MonteCarloTreeStrategy\Tree\Node;
 use Sagrada\DiePlacement;
 use Sagrada\Game;

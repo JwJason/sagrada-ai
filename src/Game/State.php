@@ -177,24 +177,39 @@ class State
 
     public function __toString()
     {
+        $draftPoolString = '';
+        $playerString = '';
+
+        if ($this->gameIsCompleted() === true) {
+            /** @var SagradaPlayer $player */
+            foreach ($this->getGame()->getPlayers() as $player) {
+                $playerString .= $player;
+            }
+            $gameStatusString = 'GAME COMPLETED';
+        } else {
+            $draftPoolString = sprintf(
+                "Draft Pool\n" .
+                "-----------\n" .
+                "%s\n" .
+                "-----------\n",
+                (string)$this->getDraftPool()
+            );
+            $gameStatusString = sprintf(
+                "> Round #%d\n" .
+                "> Turn %d / %d\n" .
+                "-----------\n",
+                $this->getCurrentRound(),
+                $this->getCurrentTurn(),
+                count($this->getGame()->getPlayers()) * Game::TURNS_PER_PLAYER_PER_ROUND,
+            );
+            $playerString = (string)$this->getCurrentPlayer();
+        }
+
         return sprintf(
-            "> Round #%d\n" .
-            "> Turn %d / %d\n" .
-            "> Player: %s\n" .
-            "-----------\n" .
-            "Draft Pool\n" .
-            "-----------\n" .
-            "%s\n" .
-            "-----------\n" .
-            "Board\n" .
-            "-----------\n" .
-            "%s\n",
-            $this->getCurrentRound(),
-            $this->getCurrentTurn(),
-            count($this->getGame()->getPlayers()) * Game::TURNS_PER_PLAYER_PER_ROUND,
-            $this->getCurrentPlayer()->getName(),
-            $this->getDraftPool(),
-            $this->getCurrentPlayer()->getState()->getBoard()
+            "%s%s%s\n",
+            $gameStatusString,
+            $draftPoolString,
+            $playerString
         );
     }
 

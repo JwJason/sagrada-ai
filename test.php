@@ -5,17 +5,17 @@ namespace Sagrada;
 
 require_once('vendor/autoload.php');
 
-use Sagrada\Ai\Simulations\GameSimulator;
+use Sagrada\Ai\GameSimulator;
 use Sagrada\Ai\Strategies\MonteCarloTreeStrategy;
 use Sagrada\Board;
 use Sagrada\DiePlacement\BoardPlacer;
 use Sagrada\DiePlacement\Finder;
+use Sagrada\DiePlacement\Validator;
 use Sagrada\Game\PlayerState;
 use Sagrada\Game\State;
 use Sagrada\Player\SagradaPlayer;
 use Sagrada\ScoreCards\Cards;
 use Sagrada\ScoreCards\SagradaScoreCardCollection;
-use Sagrada\DiePlacement\Validator;
 
 const DRAFT_POOL_SIZE = 5;
 
@@ -71,7 +71,7 @@ try {
         echo sprintf("Playing %s\n", $turn);
         $gameState = $gameSimulator->simulateTurn($gameState, $turn);
     }
-    echo "Score: " . $gameState->getGame()->getPlayers()[0]->getState()->getScore() . "\n";
+    echo (string)$gameState;
 } catch (\Throwable $t) {
     throw $t;
 }

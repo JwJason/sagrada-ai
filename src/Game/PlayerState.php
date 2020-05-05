@@ -71,4 +71,18 @@ class PlayerState
     {
         return $this->turnHistory;
     }
+
+    public function __toString()
+    {
+        return sprintf(
+            "-----------\n" .
+            "Board\n" .
+            "-----------\n" .
+            "%s\n" .
+            "-----------\n" .
+            "Score: %d\n",
+            (string)$this->getBoard(),
+            $this->getScore()->getTotal()
+        );
+    }
 }

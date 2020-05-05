@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Sagrada\Ai\Simulations;
+namespace Sagrada\Ai;
 
 use Sagrada\DiePlacement;
 use Sagrada\Game;
