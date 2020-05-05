@@ -16,7 +16,7 @@ use Sagrada\Turn;
 class MonteCarloTreeStrategy implements StrategyInterface
 {
     public const MAX_TREE_DEPTH = 10;
-    public const MINIMUM_VISITS_PER_NODE = 35;
+    public const MINIMUM_VISITS_PER_NODE = 70;
 
     /** @var GameSimulator */
     protected $gameSimulator;
@@ -38,7 +38,7 @@ class MonteCarloTreeStrategy implements StrategyInterface
     {
         $totalSimluations = 0;
         $tree = $this->createTreeFromGameState($gameState);
-        $endTime = time() + 30;
+        $endTime = time() + 60;
         $rootNode = $tree->getRootNode();
         $myPlayerIndex = $gameState->getGame()->getPlayerIndex($gameState->getCurrentPlayer());
         $myCurrentRound = $gameState->getCurrentRound();
@@ -229,27 +229,18 @@ class MonteCarloTreeStrategy implements StrategyInterface
 
         echo ">>>>>> PRUNING NODE\n";
 
-        $childMean = $childAverageSum / $numberOfChildren;
-
-        $variance = 0;
-
-        /** @var Node $childNode */
-        foreach ($children as $childNode) {
-            $variance += (($childNode->getAggregateScore() / $childNode->getVisitCount()) - $childMean)**2;
-        }
-        $standardDeviation = $variance / $numberOfChildren;
+        $childAverageMean = $childAverageSum / $numberOfChildren;
 
         /** @var Node $childNode */
         foreach ($children as $key => $childNode) {
-             $averageNodeScore = $childNode->getAggregateScore() / $childNode->getVisitCount();
+             $childMean = $childNode->getAggregateScore() / $childNode->getVisitCount();
              echo sprintf(
-                 "children=%d; avg score=%f; mean=%f; standard deviation=%f\n",
+                 "children=%d; avg score=%f; mean=%f;\n",
                 $numberOfChildren,
-                $averageNodeScore,
                 $childMean,
-                $standardDeviation
+                $childAverageMean,
              );
-             if ($averageNodeScore < $childMean - (0.5*$standardDeviation)) {
+             if ($childMean < $childAverageMean) {
                  unset($children[$key]);
                  echo "Pruned 1 child\n";
              }
@@ -257,6 +248,33 @@ class MonteCarloTreeStrategy implements StrategyInterface
 
         $node->setChildren($children);
         $node->setHasBeenPruned(true);
+
+//        $variance = 0;
+//
+//        /** @var Node $childNode */
+//        foreach ($children as $childNode) {
+//            $variance += (($childNode->getAggregateScore() / $childNode->getVisitCount()) - $childAverageMean)**2;
+//        }
+//        $standardDeviation = $variance / $numberOfChildren;
+//
+//        /** @var Node $childNode */
+//        foreach ($children as $key => $childNode) {
+//             $childMean = $childNode->getAggregateScore() / $childNode->getVisitCount();
+//             echo sprintf(
+//                 "children=%d; avg score=%f; mean=%f; standard deviation=%f\n",
+//                $numberOfChildren,
+//                $childMean,
+//                $childAverageMean,
+//                $standardDeviation
+//             );
+//             if ($childMean < $childAverageMean - (0.5*$standardDeviation)) {
+//                 unset($children[$key]);
+//                 echo "Pruned 1 child\n";
+//             }
+//        }
+//
+//        $node->setChildren($children);
+//        $node->setHasBeenPruned(true);
     }
 
     /**

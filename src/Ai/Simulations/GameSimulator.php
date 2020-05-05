@@ -55,6 +55,11 @@ class GameSimulator
         return $gameState;
     }
 
+    public function simulateTurns(Game\State $initialGameState, Turn\Collection $turns)
+    {
+
+    }
+
     public function simulateRandomTurn(Game\State $initialGameState): Game\State
     {
         $gameState = $initialGameState->deepCopy();
