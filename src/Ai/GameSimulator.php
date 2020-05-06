@@ -19,15 +19,14 @@ class GameSimulator
         $gameState = $initialGameState->deepCopy();
 
         while ($gameState->gameIsCompleted() === false) {
-            $gameState = $this->simulateRandomTurn($gameState);
+            $this->simulateRandomTurn($gameState);
         }
 
         return $gameState;
     }
 
-    public function simulateTurn(Game\State $initialGameState, Turn $turn, bool $pullFromDieBag=false): Game\State
+    public function simulateTurn(Game\State $gameState, Turn $turn, bool $pullFromDieBag=false): void
     {
-        $gameState = $initialGameState->deepCopy();
         $player = $gameState->getCurrentPlayer();
 
         if ($turn instanceof Turn\DiePlacement) {
@@ -50,29 +49,31 @@ class GameSimulator
         }
 
         $gameState->nextTurn();
-        return $gameState;
-    }
-
-    public function simulateTurns(Game\State $initialGameState, Turn\Collection $turns)
-    {
-
     }
 
     // TODO - Add 'Pass' turn option to this, as well as to the node expansion
-    public function simulateRandomTurn(Game\State $initialGameState): Game\State
+    public function simulateRandomTurn(Game\State $gameState): void
     {
-        $gameState = $initialGameState->deepCopy();
         $placementFinder = $gameState->getGame()->getPlacementFinder();
         $placementPlacer = $gameState->getGame()->getPlacementPlacer();
 
         $board = $gameState->getCurrentPlayer()->getState()->getBoard();
-        $draftPool = $gameState->getDraftPool();
-        $diePlacements = $placementFinder->getAllValidDiePlacementsForDieCollection($draftPool, $board);
+
+        $diePlacements = null;
+
+        $dieCollection = $gameState->getDraftPool();
+
+        foreach ($dieCollection->getAll() as $die) {
+            $diePlacements = $placementFinder->getAllValidDiePlacementsForDie($die, $board);
+            if (count($diePlacements) > 0) {
+                break;
+            }
+        }
 
         if (empty($diePlacements)) {
             $gameState->getCurrentPlayer()->getState()->getTurnHistory()->add(new Pass());
             $gameState->nextTurn();
-            return $gameState;
+            return;
         }
 
         /** @var DiePlacement $diePlacement */
@@ -81,7 +82,5 @@ class GameSimulator
         $placementPlacer->putDiePlacementOnBoard($diePlacement, $board);
         $gameState->getCurrentPlayer()->getState()->getTurnHistory()->add(new Turn\DiePlacement($diePlacement));
         $gameState->nextTurn();
-
-        return $gameState;
     }
 }

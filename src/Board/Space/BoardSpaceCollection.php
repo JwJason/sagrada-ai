@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace Sagrada\Board\Space;
 
-use mysql_xdevapi\Exception;
-
 /**
  * Class BoardSpaceCollection
  * @package Sagrada\Board\Space
@@ -57,9 +55,8 @@ class BoardSpaceCollection
     /**
      * @param array $items
      */
-    public function setItems(array $items)
+    public function setItems(array $items): void
     {
-        $this->validateItemsOrThrowException($items);
         $this->items = $items;
     }
 
@@ -70,7 +67,7 @@ class BoardSpaceCollection
     {
         $filtered = array_filter(
             $this->getItems(),
-            function (BoardSpace $space) {
+            static function (BoardSpace $space) {
                 return $space->hasDie() === true;
             }
         );
@@ -84,28 +81,10 @@ class BoardSpaceCollection
     {
         $filtered = array_filter(
             $this->getItems(),
-            function (BoardSpace $space) {
+            static function (BoardSpace $space) {
                 return $space->hasDie() === false;
             }
         );
         return new BoardSpaceCollection($filtered);
-    }
-
-    /**
-     * @param array $items
-     * @throws \Exception
-     */
-    protected function validateItemsOrThrowException(array $items)
-    {
-        foreach ($items as $item) {
-            if ($item instanceof BoardSpace === false) {
-                throw new \Exception(
-                    sprintf(
-                        'Collection must contain objects of type BoardSpace, got type %s',
-                        gettype($item)
-                    )
-                );
-            }
-        }
     }
 }

@@ -12,13 +12,7 @@ use Sagrada\DieSpace\DieSpace;
 
 class GridFactory
 {
-    /**
-     * @param Board $board
-     * @param array $gridSymbols
-     * @return Grid
-     * @throws \Exception
-     */
-    public function createBoardGridFromSymbols(Board $board, array $gridSymbols): Grid
+    public function createBoardGridFromSymbols(Board $board, array $gridSymbols, bool $cacheAdjacencyLookups=false): Grid
     {
         $grid = [];
         $factory = new RestrictionsFactory();
@@ -35,6 +29,6 @@ class GridFactory
             $grid[] = $gridRow;
         }
 
-        return new Grid($grid);
+        return new Grid($grid, $cacheAdjacencyLookups);
     }
 }

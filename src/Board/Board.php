@@ -19,16 +19,15 @@ class Board
     /** @var AbstractMetaBoard */
     protected $meta;
 
-    /**
-     * Board constructor.
-     * @param AbstractMetaBoard $meta
-     * @throws \Exception
-     */
-    public function __construct(AbstractMetaBoard $meta)
+    /** @var bool */
+    protected $hasAnyDice;
+
+    public function __construct(AbstractMetaBoard $meta, bool $cacheAdjacencyLookups=false)
     {
         $gridFactory = new GridFactory();
-        $this->grid = $gridFactory->createBoardGridFromSymbols($this, $meta->getGridSymbols());
+        $this->grid = $gridFactory->createBoardGridFromSymbols($this, $meta->getGridSymbols(), $cacheAdjacencyLookups);
         $this->meta = $meta;
+        $this->hasAnyDice = false;
     }
 
     /**
@@ -38,8 +37,8 @@ class Board
      */
     public function getAllAdjacentSpaces(GridCoordinates $coordinates): BoardSpaceCollection
     {
-        $adjacentCoordinates = $this->getGrid()->getAllAdjacentCoordinates($coordinates);
-        return $this->getSpaces($adjacentCoordinates);
+        $spaces = $this->getGrid()->getAllAdjacentSpaces($coordinates);
+        return new BoardSpaceCollection($spaces);
     }
 
     /**
@@ -49,8 +48,8 @@ class Board
      */
     public function getOrthongonallyAdjacentSpaces(GridCoordinates $coordinates): BoardSpaceCollection
     {
-        $adjacentCoordinates = $this->getGrid()->getOrthogonallyAdjacentCoordinates($coordinates);
-        return $this->getSpaces($adjacentCoordinates);
+        $spaces = $this->getGrid()->getOrthogonallyAdjacentSpaces($coordinates);
+        return new BoardSpaceCollection($spaces);
     }
 
     /**
@@ -60,8 +59,8 @@ class Board
      */
     public function getDiagonallyAdjacentSpaces(GridCoordinates $coordinates): BoardSpaceCollection
     {
-        $adjacentCoordinates = $this->getGrid()->getDiagonallyAdjacentCoordinates($coordinates);
-        return $this->getSpaces($adjacentCoordinates);
+        $spaces = $this->getGrid()->getDiagonallyAdjacentSpaces($coordinates);
+        return new BoardSpaceCollection($spaces);
     }
 
     /**
@@ -100,8 +99,9 @@ class Board
         $allSpaces = [];
         foreach ($iterator as $row) {
             $rowSpaces = $row->getItems();
-            $allSpaces = array_merge($allSpaces, $rowSpaces);
+            $allSpaces[] = $rowSpaces;
         }
+        $allSpaces = array_merge(...$allSpaces);
         return new BoardSpaceCollection($allSpaces);
     }
 
@@ -114,8 +114,9 @@ class Board
         $openSpaces = [];
         foreach ($iterator as $row) {
             $rowOpenSpaces = $row->getFilteredByNotHavingDice();
-            $openSpaces = array_merge($openSpaces, $rowOpenSpaces->getItems());
+            $openSpaces[] = $rowOpenSpaces->getItems();
         }
+        $openSpaces = array_merge(...$openSpaces);
         return new BoardSpaceCollection($openSpaces);
     }
 
@@ -128,8 +129,9 @@ class Board
         $coveredSpaces = [];
         foreach ($iterator as $row) {
             $rowCoveredSpaces = $row->getFilteredByHavingDice();
-            $coveredSpaces = array_merge($coveredSpaces, $rowCoveredSpaces->getItems());
+            $coveredSpaces[] = $rowCoveredSpaces->getItems();
         }
+        $coveredSpaces = array_merge(...$coveredSpaces);
         return new BoardSpaceCollection($coveredSpaces);
     }
 
@@ -151,8 +153,7 @@ class Board
      */
     public function getSpace(GridCoordinates $coordinates): BoardSpace
     {
-        $item = $this->getGrid()->getItem($coordinates);
-        return $item;
+        return $this->getGrid()->getItem($coordinates);
     }
 
     /**
@@ -163,28 +164,15 @@ class Board
     public function setSpace(BoardSpace $boardSpace, GridCoordinates $coordinates): void
     {
         $this->getGrid()->setItem($boardSpace, $coordinates);
+        $this->hasAnyDice = true;
     }
 
     /**
-     * @param array $coordinatesCollection
-     * @return BoardSpaceCollection
-     * @throws \Exception
+     * @return bool
      */
-    public function getSpaces(array $coordinatesCollection): BoardSpaceCollection
+    public function hasAnyDice(): bool
     {
-        $spaces = [];
-        foreach ($coordinatesCollection as $coordinates) {
-            $spaces[] = $this->getSpace($coordinates);
-        }
-        return new BoardSpaceCollection($spaces);
-    }
-
-    /**
-     * @return string
-     */
-    public function toString(): string
-    {
-        return $this->__toString();
+        return $this->hasAnyDice;
     }
 
     /**
@@ -199,9 +187,9 @@ class Board
             $rowArray = array_map(function(BoardSpace $boardSpace) {
                 return $boardSpace->toString();
             }, $row->getItems());
-            $rowsArray[] = join(" ", $rowArray);
+            $rowsArray[] = implode(" ", $rowArray);
         }
 
-        return join("\n", $rowsArray);
+        return implode("\n", $rowsArray);
     }
 }

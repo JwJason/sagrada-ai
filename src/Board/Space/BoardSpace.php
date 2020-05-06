@@ -138,8 +138,7 @@ class BoardSpace
      */
     public function hasIntrinsicColorRestriction(): bool
     {
-        return $this->hasIntrinsicRestriction()
-            && $this->getIntrinsicRestriction() instanceof ColorRestrictionInterface;
+        return $this->getIntrinsicRestriction() instanceof ColorRestrictionInterface;
     }
 
     /**
@@ -147,8 +146,7 @@ class BoardSpace
      */
     public function hasIntrinsicValueRestriction(): bool
     {
-        return $this->hasIntrinsicRestriction()
-            && $this->getIntrinsicRestriction() instanceof ValueRestrictionInterface;
+        return $this->getIntrinsicRestriction() instanceof ValueRestrictionInterface;
     }
 
     /**
