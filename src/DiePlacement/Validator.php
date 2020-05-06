@@ -50,7 +50,7 @@ class Validator
     public function placementMeetsGameRequirements(DiePlacement $diePlacement, Board $board): bool
     {
         // If there are no dice currently on the board, the new die must be placed along the outer edge.
-        if ($board->getAllCoveredSpaces()->getCount() === 0) {
+        if ($board->hasAnyDice() === false) {
             $row = $diePlacement->getCoordinates()->getRow();
             $col = $diePlacement->getCoordinates()->getCol();
             return ($row === 0 || $row === $board->getGrid()->getRowCount() - 1)

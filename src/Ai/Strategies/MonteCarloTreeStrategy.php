@@ -25,13 +25,17 @@ class MonteCarloTreeStrategy implements StrategyInterface
     /** @var Helper */
     protected $helper;
 
+    /** @var bool */
+    protected $pruneNodes;
+
     /** @var Uct */
     protected $uct;
 
-    public function __construct(GameSimulator $gameSimulator, Uct $uct)
+    public function __construct(GameSimulator $gameSimulator, Uct $uct, bool $pruneNodes=true)
     {
         $this->gameSimulator = $gameSimulator;
         $this->uct = $uct;
+        $this->pruneNodes = $pruneNodes;
         $this->helper = new Helper($this->gameSimulator);
     }
 
@@ -48,7 +52,7 @@ class MonteCarloTreeStrategy implements StrategyInterface
             $node = $this->selectPromisingNode($rootNode);
             $nodeToExplore = $node;
 
-            if ($node->hasBeenPruned() === false) {
+            if ($this->doesPruneNodes() === true && $node->hasBeenPruned() === false) {
                 $this->pruneNode($node);
             }
 
@@ -78,7 +82,7 @@ class MonteCarloTreeStrategy implements StrategyInterface
         $bestNode = $this->getChildWithMaxScore($rootNode);
 
         if (!$bestNode) {
-            return null;
+            throw new \RuntimeException('No best turn found');
         }
 
         $bestNodeGameState = $this->getHelper()->getGameStateFromNode($bestNode);
@@ -94,6 +98,8 @@ class MonteCarloTreeStrategy implements StrategyInterface
             /** @var SagradaPlayer $player */
             $player = $this->getHelper()->getGameStateFromNode($node)->getGame()->getPlayers()[0];
             $turn = $player->getState()->getTurnHistory()->last();
+
+            echo "Pruned nodes are not visible.\n";
 
             if ($node->getVisitCount() > 0) {
                 echo sprintf(
@@ -236,5 +242,11 @@ class MonteCarloTreeStrategy implements StrategyInterface
     public function getHelper(): Helper
     {
         return $this->helper;
+    }
+
+    /** @return bool */
+    public function doesPruneNodes(): bool
+    {
+        return $this->pruneNodes;
     }
 }

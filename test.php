@@ -43,7 +43,7 @@ function initializeGame(): Game
     $gameState->setGame($game);
 
     $aiPlayer = new SagradaPlayer();
-    $aiPlayerBoard = new Board\Board(new Board\Meta\Comitas());
+    $aiPlayerBoard = new Board\Board(new Board\Meta\Comitas(), true);
     $aiPlayer->setName('AI');
     $aiPlayer->setState(new PlayerState($aiPlayer, $aiPlayerBoard, $game));
 
@@ -53,7 +53,8 @@ function initializeGame(): Game
     return $game;
 }
 
-try {
+function main(): void
+{
     $game = initializeGame();
     $gameSimulator = new GameSimulator();
 
@@ -65,13 +66,20 @@ try {
     // Example turns
     $gameState = $game->getState();
     $gameState->initializeFirstRound();
+//    while ($gameState->currentRoundHasTurnsRemaining() && $gameState->getCurrentRound() === 1) {
     while ($gameState->gameIsCompleted() === false) {
         echo (string)$gameState;
         $turn = $aiStrategy->getBestTurn($gameState);
         echo sprintf("Playing %s\n", $turn);
-        $gameState = $gameSimulator->simulateTurn($gameState, $turn);
+        $gameSimulator->simulateTurn($gameState, $turn);
     }
     echo (string)$gameState;
+}
+
+try {
+    main();
 } catch (\Throwable $t) {
-    throw $t;
+    echo $t->getMessage() . PHP_EOL;
+    echo $t->getFile() . PHP_EOL;
+    echo $t->getLine() . PHP_EOL;
 }

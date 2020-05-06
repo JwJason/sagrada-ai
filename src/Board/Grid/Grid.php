@@ -3,18 +3,80 @@ declare(strict_types=1);
 
 namespace Sagrada\Board\Grid;
 
+use Sagrada\Board\Space\BoardSpace;
+
 class Grid
 {
+    /** @var bool */
+    protected $cacheAdjacencyLookups;
+
+    /** @var array */
     protected $grid;
 
-    /**
-     * Grid constructor.
-     * @param array $gridArray
-     * @throws \Exception
-     */
-    public function __construct(array $gridArray)
+    /** @var array */
+    protected $gridDiagonalAdjacencyCache;
+
+    /** @var array */
+    protected $gridOrthogonalAdjacencyCache;
+
+    public function __construct(array $gridArray, bool $cacheAdjacencyLookups=false)
     {
         $this->setGrid($gridArray);
+        $this->gridDiagonalAdjacencyCache = array_fill(0, count($gridArray), []);
+        $this->gridOrthogonalAdjacencyCache = array_fill(0, count($gridArray), []);
+        $this->cacheAdjacencyLookups = $cacheAdjacencyLookups;
+    }
+
+    public function getAllAdjacentSpaces(GridCoordinates $coordinates): array
+    {
+        return array_merge(
+            $this->getDiagonallyAdjacentSpaces($coordinates),
+            $this->getOrthogonallyAdjacentSpaces($coordinates)
+        );
+    }
+
+    public function getOrthogonallyAdjacentSpaces(GridCoordinates $coordinates): array
+    {
+        $row = $coordinates->getRow();
+        $col = $coordinates->getCol();
+
+        if (isset($this->gridOrthogonalAdjacencyCache[$row][$col])) {
+            return $this->gridOrthogonalAdjacencyCache[$row][$col];
+        }
+
+        $adjacentCoordinates = $this->getOrthogonallyAdjacentCoordinates($coordinates);
+        $adjacentSpaces = [];
+        foreach ($adjacentCoordinates as $adjacentCoordinate) {
+            $adjacentSpaces[] = $this->getItem($adjacentCoordinate);
+        }
+
+        if ($this->cachesAdjacencyLookups()) {
+            $this->gridOrthogonalAdjacencyCache[$row][$col] = $adjacentSpaces;
+        }
+
+        return $adjacentSpaces;
+    }
+
+    public function getDiagonallyAdjacentSpaces(GridCoordinates $coordinates): array
+    {
+        $row = $coordinates->getRow();
+        $col = $coordinates->getCol();
+
+        if (isset($this->gridDiagonalAdjacencyCache[$row][$col])) {
+            return $this->gridDiagonalAdjacencyCache[$row][$col];
+        }
+
+        $adjacentCoordinates = $this->getDiagonallyAdjacentCoordinates($coordinates);
+        $adjacentSpaces = [];
+        foreach ($adjacentCoordinates as $adjacentCoordinate) {
+            $adjacentSpaces[] = $this->getItem($adjacentCoordinate);
+        }
+
+        if ($this->cachesAdjacencyLookups()) {
+            $this->gridDiagonalAdjacencyCache[$row][$col] = $adjacentSpaces;
+        }
+
+        return $adjacentSpaces;
     }
 
     /**
@@ -22,7 +84,7 @@ class Grid
      * @return GridCoordinates[]
      * @throws \Exception
      */
-    public function getOrthogonallyAdjacentCoordinates(GridCoordinates $coordinates): array
+    protected function getOrthogonallyAdjacentCoordinates(GridCoordinates $coordinates): array
     {
         if (!$this->areValidCoordinates($coordinates)) {
             throw new \Exception(sprintf('Invalid coordinates: %s', $coordinates));
@@ -47,7 +109,7 @@ class Grid
      * @return GridCoordinates[]
      * @throws \Exception
      */
-    public function getDiagonallyAdjacentCoordinates(GridCoordinates $coordinates): array
+    protected function getDiagonallyAdjacentCoordinates(GridCoordinates $coordinates): array
     {
         if (!$this->areValidCoordinates($coordinates)) {
             throw new \Exception(sprintf('Invalid coordinates: %s', $coordinates));
@@ -72,13 +134,22 @@ class Grid
      * @return GridCoordinates[]
      * @throws \Exception
      */
-    public function getAllAdjacentCoordinates(GridCoordinates $coordinates): array
+    protected function getAllAdjacentCoordinates(GridCoordinates $coordinates): array
     {
         return array_merge(
             $this->getOrthogonallyAdjacentCoordinates($coordinates),
             $this->getDiagonallyAdjacentCoordinates($coordinates)
         );
     }
+
+    /**
+     * @return bool
+     */
+    public function cachesAdjacencyLookups(): bool
+    {
+        return $this->cacheAdjacencyLookups;
+    }
+
 
     /**
      * @param int $col
@@ -97,33 +168,31 @@ class Grid
     /**
      * @param GridCoordinates $coordinates
      * @throws \Exception
-     * @return mixed
+     * @return BoardSpace
      */
-    public function getItem(GridCoordinates $coordinates)
+    public function getItem(GridCoordinates $coordinates): BoardSpace
     {
         if (!$this->areValidCoordinates($coordinates)) {
             throw new \Exception(sprintf('Invalid coordinates: %s', $coordinates));
         }
-        $grid = $this->getGrid();
         $row = $coordinates->getRow();
         $col = $coordinates->getCol();
-        return $grid[$row][$col];
+        return $this->getGrid()[$row][$col];
     }
 
     /**
-     * @param $item
+     * @param BoardSpace $item
      * @param GridCoordinates $coordinates
      * @throws \Exception
      */
-    public function setItem($item, GridCoordinates $coordinates): void
+    public function setItem(BoardSpace $item, GridCoordinates $coordinates): void
     {
         if (!$this->areValidCoordinates($coordinates)) {
             throw new \Exception(sprintf('Invalid coordinates: %s', $coordinates));
         }
-        $grid = $this->getGrid();
         $row = $coordinates->getRow();
         $col = $coordinates->getCol();
-        $grid[$row][$col] = $item;
+        $this->getGrid()[$row][$col] = $item;
     }
 
     /**
@@ -206,7 +275,7 @@ class Grid
         $col = $coordinates->getCol();
         $grid = $this->grid;
 
-        return isset($grid[$row]) && isset($grid[$row][$col]);
+        return isset($grid[$row][$col]);
     }
 
     /**

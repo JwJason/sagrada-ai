@@ -10,10 +10,20 @@ use Sagrada\Dice\Value\DiceValueFactory;
 
 class DiceBag
 {
+    /** @var int int */
     protected $amountOfEachColor;
+
+    /** @var array */
     protected $colorCounter;
+
+    /** @var DiceColorFactory $colorFactory */
     protected $colorFactory;
+
+    /** @var DiceValueFactory $valueFactory */
     protected $valueFactory;
+
+    /** @var int */
+    protected $diceRemainingCount;
 
     public function __construct(int $amountOfEachColor)
     {
@@ -25,6 +35,8 @@ class DiceBag
         foreach ($colorSymbols as $colorSymbol) {
             $this->colorCounter[$colorSymbol] = $this->amountOfEachColor;
         }
+
+        $this->diceRemainingCount = count($this->colorCounter) * $this->amountOfEachColor;
     }
 
     /**
@@ -32,13 +44,7 @@ class DiceBag
      */
     public function getAllRemainingCount(): int
     {
-        return array_reduce(
-            $this->colorCounter,
-            function (int $amountRemaining, int $totalAmountRemaining) {
-                return $amountRemaining + $totalAmountRemaining;
-            },
-            0
-        );
+        return $this->diceRemainingCount;
     }
 
     /**
@@ -48,7 +54,11 @@ class DiceBag
      */
     public function getColorRemainingCount(DiceColorInterface $color): int
     {
-        $colorSymbol = $color->getSymbol();
+        return $this->getColorRemainingCountForColorSymbol($color->getSymbol());
+    }
+
+    public function getColorRemainingCountForColorSymbol(string $colorSymbol): int
+    {
         if (!isset($this->colorCounter[$colorSymbol])) {
             throw new \Exception(sprintf('DiceBag has no colors with symbol: "%s"', $colorSymbol));
         }
@@ -73,9 +83,9 @@ class DiceBag
             throw new \Exception("No remaining die in bag.");
         }
 
-        $filteredColorCounter = $this->getColorCounterForRemainingColors();
-        $colorSymbol = array_rand($filteredColorCounter);
-        $valueSymbol = strval(random_int(1, 6));
+        $colorProbabilityMap = $this->getColorProbabilityMap();
+        $colorSymbol = $this->getRandomWeightedElement($colorProbabilityMap);
+        $valueSymbol = (string)(random_int(1, 6));
 
         $die = new SagradaDie(
             $this->colorFactory->createDiceColorFromSymbol($colorSymbol),
@@ -83,6 +93,7 @@ class DiceBag
         );
 
         $this->colorCounter[$colorSymbol]--;
+        $this->diceRemainingCount--;
 
         return $die;
     }
@@ -104,6 +115,7 @@ class DiceBag
     {
         $colorSymbol = $diceColor->getSymbol();
         $this->colorCounter[$colorSymbol]--;
+        $this->diceRemainingCount--;
     }
 
     /**
@@ -138,5 +150,42 @@ class DiceBag
                 return $amountRemaining > 0;
             }
         );
+    }
+
+    protected function getColorProbabilityMap(): array
+    {
+        $colorCountMap = $this->getColorCounterForRemainingColors();
+        $colorProbabilityMap = [];
+        foreach ($colorCountMap as $colorSymbol => $numberOfColorsRemaining) {
+            $colorProbabilityMap[$colorSymbol] =
+                ($this->getColorRemainingCountForColorSymbol($colorSymbol) / $this->getAllRemainingCount()) * 100;
+        }
+        return $colorProbabilityMap;
+    }
+
+    /**
+     * https://stackoverflow.com/questions/445235/generating-random-results-by-weight-in-php
+     * getRandomWeightedElement()
+     * Utility function for getting random values with weighting.
+     * Pass in an associative array, such as array('A'=>5, 'B'=>45, 'C'=>50)
+     * An array like this means that "A" has a 5% chance of being selected, "B" 45%, and "C" 50%.
+     * The return value is the array key, A, B, or C in this case.  Note that the values assigned
+     * do not have to be percentages.  The values are simply relative to each other.  If one value
+     * weight was 2, and the other weight of 1, the value with the weight of 2 has about a 66%
+     * chance of being selected.  Also note that weights should be integers.
+     *
+     * @param array $weightedValues
+     */
+    function getRandomWeightedElement(array $weightedValues) {
+        $rand = random_int(1, (int) array_sum($weightedValues));
+
+        foreach ($weightedValues as $key => $value) {
+            $rand -= $value;
+            if ($rand <= 0) {
+                return $key;
+            }
+        }
+
+        return array_rand($weightedValues);
     }
 }

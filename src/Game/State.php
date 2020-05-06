@@ -200,7 +200,7 @@ class State
                 "-----------\n",
                 $this->getCurrentRound(),
                 $this->getCurrentTurn(),
-                count($this->getGame()->getPlayers()) * Game::TURNS_PER_PLAYER_PER_ROUND,
+                count($this->getGame()->getPlayers()) * Game::TURNS_PER_PLAYER_PER_ROUND
             );
             $playerString = (string)$this->getCurrentPlayer();
         }
