@@ -40,13 +40,15 @@ class Helper
                 /** @var DiePlacement $placement */
                 foreach ($placements as $placement) {
                     $turn = new Turn\DiePlacement($placement);
-                    $newGameState = $this->getGameSimulator()->simulateTurn($gameState, $turn);
+                    $newGameState = $gameState->deepCopy();
+                    $this->getGameSimulator()->simulateTurn($newGameState, $turn);
                     $newGameStateNode = new Tree\GameStateNode;
                     $newGameStateNode->setGameState($newGameState);
                     $node->addChild($newGameStateNode);
                 }
             } else {
-                $newGameState = $this->getGameSimulator()->simulateTurn($gameState, new Turn\Pass());
+                $newGameState = $gameState->deepCopy();
+                $this->getGameSimulator()->simulateTurn($newGameState, new Turn\Pass());
                 $newGameStateNode = new Tree\GameStateNode();
                 $newGameStateNode->setGameState($newGameState);
                 $node->addChild($newGameStateNode);
@@ -84,13 +86,13 @@ class Helper
     // TODO : Needs test
     public function reconstructGameStateFromTurnNode(Tree\TurnNode $node): Game\State
     {
-        $gameState = $node->getLastKnownGameState();
+        $gameState = $node->getLastKnownGameState()->deepCopy();
         $turnsSinceGameState = $node->getAllPrecedingTurns();
 
         try {
             /** @var Turn $turn */
             foreach ($turnsSinceGameState as $turn) {
-                $gameState = $this->getGameSimulator()->simulateTurn($gameState, $turn, true);
+                $this->getGameSimulator()->simulateTurn($gameState, $turn, true);
             }
         } catch (\Throwable $t) {
             echo sprintf("reconstructGameStateFromTurnNode failed: %s\n", $t);
