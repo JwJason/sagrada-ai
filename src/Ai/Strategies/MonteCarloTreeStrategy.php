@@ -16,7 +16,7 @@ use Sagrada\Turn;
 class MonteCarloTreeStrategy implements StrategyInterface
 {
     public const MAX_TREE_DEPTH = 20;
-    public const MAX_TREE_VISIT_TIME = 20;
+    public const MAX_TREE_VISIT_TIME = 30;
     public const MINIMUM_VISITS_PER_NODE = 50;
 
     /** @var GameSimulator */
