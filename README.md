@@ -6,3 +6,4 @@ AI for playing the board game [Sagrada](https://floodgategames.com/Sagrada/). Us
 - Performance optimizations.
 - Code clean-up.
 - Add interactivity for playing a game against the AI.
+- Write unit tests.
