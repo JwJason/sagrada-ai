@@ -14,8 +14,8 @@ use Sagrada\Turn;
 
 class MonteCarloTreeStrategy implements StrategyInterface
 {
-    public const MAX_TREE_DEPTH = 20;
-    public const MAX_TREE_VISIT_TIME = 30;
+    public const MAX_TREE_DEPTH = 15;
+    public const MAX_TREE_VISIT_TIME = 20;
     public const MINIMUM_VISITS_PER_NODE = 50;
 
     /** @var GameSimulator */
@@ -41,10 +41,14 @@ class MonteCarloTreeStrategy implements StrategyInterface
     /**
      * Return the best possible move for the current game state, using the Monte Carlo Tree Search algorithm.
      * The algorithm works by simulating a bunch of random game playouts for each possible move and then identifying the
-     * move with the highest average player final score.
+     * move with the highest average final player score.
      *
      * As the algorithm runs, it progressively builds a tree-node structure representing chains of possible moves (dice plays).
-     * The algorithm traverses the tree, looking for unvisited nodes or revisiting potentially good nodes.
+     * The algorithm traverses the tree, looking for unvisited nodes or revisiting potentially good nodes. It selects a node,
+     * reconstructs game state from that node, and then simulates playing out the remainder of the game.
+     * The final player score is added to the node and back-propagated to the parent nodes. In this way, the algorithm
+     * learns which nodes lead to better playouts, and it explores those nodes more frequently in order to arrive at an optimal result.
+     *
      * @param Game\State $gameState
      * @return Turn
      */
@@ -170,8 +174,8 @@ class MonteCarloTreeStrategy implements StrategyInterface
 
     /**
      * Removes child nodes that are deemed to be bad.
-     * Bad nodes have a lower than average play score compared to their sibling nodes.
-     * Pruning only happens once per node.
+     * Bad nodes have a lower-than-average play score compared to their sibling nodes.
+     * Pruning helps manage memory, and only happens once per node.
      * @param Node $node
      */
     protected function pruneNode(Node $node): void

@@ -20,7 +20,7 @@ class Helper
     }
 
     /**
-     * Expand node by adding children for every possible die placement on the current board from the current dice pool.
+     * Expands node by adding GameStateNode children for every possible die placement on the current board from the current dice pool.
      * @param Tree\GameStateNode $node
      */
     public function expandGameStateNode(Tree\GameStateNode $node): void
@@ -55,7 +55,7 @@ class Helper
     }
 
     /**
-     * Expand node by adding children for every possible die placement on the current board.
+     * Expands node by adding children for every possible die placement on the current board.
      * @param Node $node
      */
     public function expandNode(Node $node): void
@@ -99,6 +99,11 @@ class Helper
         $node->addChild($newGameStateNode);
     }
 
+    /**
+     * Reconstructs game state by traversing the given node's parents and applying each node's game turn to the game
+     * @param Tree\TurnNode $node
+     * @return Game\State
+     */
     public function reconstructGameStateFromTurnNode(Tree\TurnNode $node): Game\State
     {
         $gameState = $node->getLastKnownGameState()->deepCopy();
