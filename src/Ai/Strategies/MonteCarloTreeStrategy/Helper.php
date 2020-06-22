@@ -19,6 +19,10 @@ class Helper
         $this->gameSimulator = $gameSimulator;
     }
 
+    /**
+     * Expand node by adding children for every possible die placement on the current board from the current dice pool.
+     * @param Tree\GameStateNode $node
+     */
     public function expandGameStateNode(Tree\GameStateNode $node): void
     {
         $gameState = $node->getGameState();
@@ -37,30 +41,24 @@ class Helper
 
         try {
             if (count($placements) > 0) {
-                /** @var DiePlacement $placement */
                 foreach ($placements as $placement) {
-                    $turn = new Turn\DiePlacement($placement);
-                    $newGameState = $gameState->deepCopy();
-                    $this->getGameSimulator()->simulateTurn($newGameState, $turn);
-                    $newGameStateNode = new Tree\GameStateNode;
-                    $newGameStateNode->setGameState($newGameState);
-                    $node->addChild($newGameStateNode);
+                    $this->addChildNodeForDiePlacement($node, $gameState, $placement);
                 }
             } else {
-                $newGameState = $gameState->deepCopy();
-                $this->getGameSimulator()->simulateTurn($newGameState, new Turn\Pass());
-                $newGameStateNode = new Tree\GameStateNode();
-                $newGameStateNode->setGameState($newGameState);
-                $node->addChild($newGameStateNode);
+                $this->addChildNodeForPassTurn($node, $gameState);
             }
         } catch (\Throwable $t) {
-            echo sprintf("expandGameNode() failed: %s\n", $t);
-            echo sprintf("Game State:\n%s\n", $node->getGameState());
+            echo sprintf("expandGameNode() failed: %s\n", $t) .
+                 sprintf("Game State:\n%s\n", $node->getGameState());
             die();
         }
     }
 
-    public function expandDiePlacementNode(Node $node): void
+    /**
+     * Expand node by adding children for every possible die placement on the current board.
+     * @param Node $node
+     */
+    public function expandNode(Node $node): void
     {
         $gameState = $this->getGameStateFromNode($node);
 
@@ -75,7 +73,6 @@ class Helper
             $gameState->getCurrentPlayer()->getState()->getBoard()
         );
 
-        /** @var DiePlacement $placement */
         foreach ($placements as $placement) {
             $newDiePlacementNode = new Tree\TurnNode();
             $newDiePlacementNode->setTurn(new Turn\DiePlacement($placement));
@@ -83,7 +80,25 @@ class Helper
         }
     }
 
-    // TODO : Needs test
+    public function addChildNodeForDiePlacement(Node $node, Game\State $gameState, DiePlacement $diePlacement): void
+    {
+        $turn = new Turn\DiePlacement($diePlacement);
+        $newGameState = $gameState->deepCopy();
+        $this->getGameSimulator()->simulateTurn($newGameState, $turn);
+        $newGameStateNode = new Tree\GameStateNode;
+        $newGameStateNode->setGameState($newGameState);
+        $node->addChild($newGameStateNode);
+    }
+
+    public function addChildNodeForPassTurn(Node $node, Game\State $gameState): void
+    {
+        $newGameState = $gameState->deepCopy();
+        $this->getGameSimulator()->simulateTurn($newGameState, new Turn\Pass());
+        $newGameStateNode = new Tree\GameStateNode();
+        $newGameStateNode->setGameState($newGameState);
+        $node->addChild($newGameStateNode);
+    }
+
     public function reconstructGameStateFromTurnNode(Tree\TurnNode $node): Game\State
     {
         $gameState = $node->getLastKnownGameState()->deepCopy();
@@ -95,16 +110,20 @@ class Helper
                 $this->getGameSimulator()->simulateTurn($gameState, $turn, true);
             }
         } catch (\Throwable $t) {
-            echo sprintf("reconstructGameStateFromTurnNode failed: %s\n", $t);
-            echo sprintf("Last game state prior to reconstruction:\n%s\n\n", $node->getLastKnownGameState());
-            echo sprintf("Last reconstructed game state:\n%s\n\n", $gameState);
-            echo sprintf("Turns used for reconstruction:\n%s\n", implode(' -> ' . PHP_EOL, $turnsSinceGameState));
+            echo sprintf("reconstructGameStateFromTurnNode failed: %s\n", $t)
+                 . sprintf("Last game state prior to reconstruction:\n%s\n\n", $node->getLastKnownGameState())
+                 . sprintf("Last reconstructed game state:\n%s\n\n", $gameState)
+                 . sprintf("Turns used for reconstruction:\n%s\n", implode(' -> ' . PHP_EOL, $turnsSinceGameState));
             die();
         }
 
         return $gameState;
     }
 
+    /**
+     * @param Node $node
+     * @return Game\State
+     */
     public function getGameStateFromNode(Node $node) : Game\State
     {
         if ($node instanceof Tree\GameStateNode) {
@@ -122,13 +141,5 @@ class Helper
     public function getGameSimulator(): GameSimulator
     {
         return $this->gameSimulator;
-    }
-
-    /**
-     * @param GameSimulator $gameSimulator
-     */
-    public function setGameSimulator(GameSimulator $gameSimulator): void
-    {
-        $this->gameSimulator = $gameSimulator;
     }
 }

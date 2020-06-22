@@ -51,7 +51,6 @@ class GameSimulator
         $gameState->nextTurn();
     }
 
-    // TODO - Add 'Pass' turn option to this, as well as to the node expansion
     public function simulateRandomTurn(Game\State $gameState): void
     {
         $placementFinder = $gameState->getGame()->getPlacementFinder();

@@ -10,7 +10,6 @@ use Sagrada\Ai\Strategies\MonteCarloTreeStrategy\Tree\Node;
 use Sagrada\Ai\Strategies\MonteCarloTreeStrategy\Uct;
 use Sagrada\Game;
 use Sagrada\Game\Score;
-use Sagrada\Player\SagradaPlayer;
 use Sagrada\Turn;
 
 class MonteCarloTreeStrategy implements StrategyInterface
@@ -39,9 +38,18 @@ class MonteCarloTreeStrategy implements StrategyInterface
         $this->helper = new Helper($this->gameSimulator);
     }
 
+    /**
+     * Return the best possible move for the current game state, using the Monte Carlo Tree Search algorithm.
+     * The algorithm works by simulating a bunch of random game playouts for each possible move and then identifying the
+     * move with the highest average player final score.
+     *
+     * As the algorithm runs, it progressively builds a tree-node structure representing chains of possible moves (dice plays).
+     * The algorithm traverses the tree, looking for unvisited nodes or revisiting potentially good nodes.
+     * @param Game\State $gameState
+     * @return Turn
+     */
     public function getBestTurn(Game\State $gameState): Turn
     {
-        $totalSimulations = 0;
         $tree = $this->createTreeFromGameState($gameState);
         $endTime = time() + self::MAX_TREE_VISIT_TIME;
         $rootNode = $tree->getRootNode();
@@ -52,32 +60,19 @@ class MonteCarloTreeStrategy implements StrategyInterface
             $node = $this->selectPromisingNode($rootNode);
             $nodeToExplore = $node;
 
-            if ($this->doesPruneNodes() === true && $node->hasBeenPruned() === false) {
-                $this->pruneNode($node);
-            }
-
-            if (empty($node->getChildren()) && ($node->getDepth() < self::MAX_TREE_DEPTH)) {
-                $this->expandNode($node, $myCurrentRound);
-            }
+            $this->expandNode($node, $myCurrentRound);
 
             $childNodes = $node->getChildren();
-
             if (!empty($childNodes)) {
                 $nodeToExplore = $childNodes[array_rand($childNodes)];
             }
 
             $nodeGameState = $this->getHelper()->getGameStateFromNode($nodeToExplore);
-
             $simulatedGameState = $this->gameSimulator->simulateRandomPlayout($nodeGameState);
-            /** @var SagradaPlayer $myPlayer */
-            $myPlayer = $simulatedGameState->getGame()->getPlayers()[$myPlayerIndex];
+            $myPlayer = $simulatedGameState->getGame()->getPlayer($myPlayerIndex);
+
             $this->backPropagateNodeData($nodeToExplore, $myPlayer->getState()->getScore());
-
-            $totalSimulations++;
         }
-
-        echo sprintf("TOTAL SIMULATIONS: %d\n", $totalSimulations);
-        $this->debugChildNodes($rootNode);
 
         $bestNode = $this->getChildWithMaxScore($rootNode);
 
@@ -86,35 +81,14 @@ class MonteCarloTreeStrategy implements StrategyInterface
         }
 
         $bestNodeGameState = $this->getHelper()->getGameStateFromNode($bestNode);
-        /** @var SagradaPlayer $myPlayer */
-        $myPlayer = $bestNodeGameState->getGame()->getPlayers()[$myPlayerIndex];
+        $myPlayer = $bestNodeGameState->getGame()->getPlayer($myPlayerIndex);
         return $myPlayer->getState()->getTurnHistory()->last();
     }
 
-    public function debugChildNodes(Node $startingNode): void
-    {
-        foreach ($startingNode->getChildren() as $node) {
-            // TODO - Remove hard-coded assumption that AI player is player 1
-            /** @var SagradaPlayer $player */
-            $player = $this->getHelper()->getGameStateFromNode($node)->getGame()->getPlayers()[0];
-            $turn = $player->getState()->getTurnHistory()->last();
-
-            echo "Pruned nodes are not visible.\n";
-
-            if ($node->getVisitCount() > 0) {
-                echo sprintf(
-                    "Play=%s|AggregateScore=%f|AvgScore=%f|Visits=%d\n",
-                    $turn,
-                    $node->getAggregateScore(),
-                    $node->getAggregateScore() / $node->getVisitCount(),
-                    $node->getVisitCount()
-                );
-            } else {
-                echo sprintf("Play=%s|UNVISITED\n", $turn);
-            }
-        }
-    }
-
+    /**
+     * @param Game\State $gameState
+     * @return Tree
+     */
     protected function createTreeFromGameState(Game\State $gameState): Tree
     {
         $gameStateNode = new Tree\GameStateNode();
@@ -122,6 +96,11 @@ class MonteCarloTreeStrategy implements StrategyInterface
         return new Tree($gameStateNode);
     }
 
+    /**
+     * Find the child node with the highest average score.
+     * @param Node $startingNode
+     * @return Node | null
+     */
     protected function getChildWithMaxScore(Node $startingNode): ?Node
     {
         $children = $startingNode->getChildren();
@@ -132,7 +111,7 @@ class MonteCarloTreeStrategy implements StrategyInterface
             if ($childNode->getVisitCount() === 0) {
                 continue;
             }
-            $score = $childNode->getAggregateScore() / $childNode->getVisitCount();
+            $score = $childNode->getAverageScore();
             if ($score > $max) {
                 $max = $score;
                 $bestNode = $childNode;
@@ -143,6 +122,7 @@ class MonteCarloTreeStrategy implements StrategyInterface
     }
 
     /**
+     * Select a node with good play potential, using the UCT algorithm (https://www.chessprogramming.org/UCT)
      * @param Node $startingNode
      * @return Node
      */
@@ -160,25 +140,46 @@ class MonteCarloTreeStrategy implements StrategyInterface
         return $node;
     }
 
+    /**
+     * Expand to the node (i.e. add child nodes if they don't already exist)
+     * @param Node $node
+     * @param int $myCurrentRound
+     */
     protected function expandNode(Node $node, int $myCurrentRound): void
     {
-        // Limit construction of GameStateNodes to simulating the current round only.
-        // GameStateNodes are only useful in the current round, when we know the state of the draft pool.
+        if (!empty($node->getChildren()) || ($node->getDepth() > self::MAX_TREE_DEPTH)) {
+            return;
+        }
+
+        $helper = $this->getHelper();
+
         if ($node instanceof Tree\GameStateNode) {
+            // Limit construction of GameStateNodes to the current round only. Use TurnNodes to represent subsequent rounds.
+            // GameStateNodes are only useful in the current round, when we know the state of the dice pool.
             if ($node->getGameState()->getCurrentRound() === $myCurrentRound) {
-                $this->getHelper()->expandGameStateNode($node);
+                $helper->expandGameStateNode($node);
             } else {
-                $this->getHelper()->expandDiePlacementNode($node);
+                $helper->expandNode($node);
             }
         } else if ($node instanceof Tree\TurnNode) {
-            $this->getHelper()->expandDiePlacementNode($node);
+            $helper->expandNode($node);
         } else {
             throw new \LogicException(sprintf('Unhandled node instance type: %s', get_class($node)));
         }
     }
 
+    /**
+     * Removes child nodes that are deemed to be bad.
+     * Bad nodes have a lower than average play score compared to their sibling nodes.
+     * Pruning only happens once per node.
+     * @param Node $node
+     */
     protected function pruneNode(Node $node): void
     {
+        if ($this->doesPruneNodes() === false || $node->hasBeenPruned() === true) {
+            return;
+        }
+
         $children = $node->getChildren();
         $numberOfChildren = count($children);
         $childAverageSum = 0;
@@ -192,15 +193,14 @@ class MonteCarloTreeStrategy implements StrategyInterface
             if ($childNode->getVisitCount() < self::MINIMUM_VISITS_PER_NODE) {
                 return;
             }
-            $childAverageSum += ($childNode->getAggregateScore() / $childNode->getVisitCount());
+            $childAverageSum += $childNode->getAverageScore();
         }
 
         $childAverageMean = $childAverageSum / $numberOfChildren;
 
         /** @var Node $childNode */
         foreach ($children as $key => $childNode) {
-             $childMean = $childNode->getAggregateScore() / $childNode->getVisitCount();
-             if ($childMean < $childAverageMean) {
+             if ($childNode->getAverageScore() < $childAverageMean) {
                  unset($children[$key]);
              }
         }
@@ -219,9 +219,7 @@ class MonteCarloTreeStrategy implements StrategyInterface
         while ($node !== null) {
             $node->incrementVisitCount();
             $node->increaseAggregateScore($score->getTotal());
-            if ($node->hasBeenPruned() === false) {
-                $this->pruneNode($node);
-            }
+            $this->pruneNode($node);
             $node = $node->getParent();
         }
     }

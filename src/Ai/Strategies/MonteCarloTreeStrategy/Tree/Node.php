@@ -134,6 +134,11 @@ class Node
         ++$this->visitCount;
     }
 
+    public function getAverageScore(): float
+    {
+        return $this->getAggregateScore() / $this->getVisitCount();
+    }
+
     /**
      * @return int
      */

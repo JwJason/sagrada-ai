@@ -110,6 +110,19 @@ class Game
     }
 
     /**
+     * @param int $playerIndex
+     * @return SagradaPlayer
+     */
+    public function getPlayer(int $playerIndex): SagradaPlayer
+    {
+        $players = $this->getPlayers();
+        if (empty($players[$playerIndex])) {
+            throw new \OutOfRangeException(sprintf('Invalid player index: %d', $playerIndex));
+        }
+        return $players[$playerIndex];
+    }
+
+    /**
      * @param $players
      */
     public function setPlayers(array $players): void
